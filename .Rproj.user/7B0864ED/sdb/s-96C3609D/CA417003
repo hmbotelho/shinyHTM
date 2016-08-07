@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "# Generate Plotly scatter plot\nscatterPlot <- function(df, x, y){\n    g <- ggplot(hugo, aes_string(x, y))\n    g <- g + geom_point()\n    ggplotly(g)\n}\n\n# Generate Plotly jitter plot\njitterPlot <- function(df, x, y){\n    g <- ggplot(hugo, aes_string(x, y))\n    g <- g + geom_jitter()\n    ggplotly(g)\n}\n\n# Generate Plotly heatmap\nheatmapPlot <- function(){\n    \n}\n\n\n\n# Can open multiple files at once\n# filePath is an array of character strings\nOpenInFiji <- function(filePath, FijiPath = \"C:\\\\Fiji.app\\\\ImageJ-win64.exe\"){\n    filePath <- gsub(\"\\\\\\\\\", \"/\", filePath)\n    \n    # Generate the expression opening each image\n    fileexpression <- \"\"\n    for (path in filePath){\n        fileexpression <- paste0(fileexpression, \" -eval \\\"open('/\", path, \"')\\\"\")\n    }\n    \n    # Evoke Fiji with the expression compiled above\n    cmd <- paste0(\"\\\"\", FijiPath, \"\\\"\", fileexpression)\n    system(cmd)\n}",
+    "created" : 1470148294681.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "1|34|5|0|\n8|33|12|0|\n15|26|17|0|\n23|78|35|0|\n",
+    "hash" : "4253457316",
+    "id" : "CA417003",
+    "lastKnownWriteTime" : 1470504579,
+    "last_content_update" : 1470530377153,
+    "path" : "~/shiny/shinyHTM/functions.r",
+    "project_path" : "functions.r",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

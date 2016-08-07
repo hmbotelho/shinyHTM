@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "shinyUI(pageWithSidebar(\n    \n    \n    headerPanel(\"Data visualization\"),\n    \n    \n    sidebarPanel(\n        \n        helpText(\"Upload an image table.\"),\n        fileInput('file1', 'Choose File', accept=c('.csv')),\n        hr(),\n        \n        selectInput(\"plotType\", label = h5(\"Plot Type\"), choices = c(\"Scatter plot\", \"Jitter plot\", \"Heatmap [NOT WORKING]\")),\n        hr(),\n        \n\n        uiOutput(\"selectX\"),\n        uiOutput(\"selectY\"),\n        hr()\n        \n    ),\n    \n    mainPanel(\n        \n        tabsetPanel(\n            tabPanel(\"Plot\",\n                    verbatimTextOutput(\"selection\"),\n                    plotlyOutput(\"plot\")\n            ),\n            \n            tabPanel(\"Settings\",\n                     h2(\"Settings\"),\n                     \n                     h3(\"Select column names containing...\"),\n                     uiOutput(\"selectTreatment\"),\n                     uiOutput(\"selectBatch\"),\n                     uiOutput(\"selectWellCoord\"),\n                     uiOutput(\"selectPosCoord\"),\n                     hr(),\n                     \n                     h3(\"Click & view settings\"),\n                     uiOutput(\"fiji_path\"),\n                     hr(),\n                     uiOutput(\"availableimages\"),\n                     hr(),\n                     textInput(\"pathInTable\", \"Image root folder name in table\", \"c:\\\\tutorial\\\\myplate_01\"),\n                     textInput(\"pathInComputer\", \"Image root folder name in this computer\", \"c:\\\\myplate_01\"),\n                     textInput(\"prefixPath\", \"Prefix: column with folder name\", \"PathName_\"),\n                     textInput(\"prefixFile\", \"Prefix: column with file name\", \"FileName_\"),\n                     hr(),\n                     \n                     h3(\"Heatmap settings\"),\n                     numericInput(\"wells_X\", \"Number positions X\", 24),\n                     numericInput(\"wells_Y\", \"Number positions Y\", 16),\n                     numericInput(\"npos_X\", \"Number subpositions X\", 2),\n                     numericInput(\"npos_Y\", \"Number subpositions Y\", 2)\n            ),\n            \n            tabPanel(\"Data table\",\n                     dataTableOutput(\"valuestable\")\n            )\n        )\n    )\n))\n",
+    "created" : 1470148173125.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2839216756",
+    "id" : "FD273EF2",
+    "lastKnownWriteTime" : 1470528405,
+    "last_content_update" : 1470528405385,
+    "path" : "~/shiny/shinyHTM/ui.r",
+    "project_path" : "ui.r",
+    "properties" : {
+        "docOutlineSize" : "266.93063127963563",
+        "docOutlineVisible" : "0"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
