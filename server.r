@@ -78,6 +78,7 @@ shinyServer(function(input, output){
             FullPathFile <- sub(tempPathInTable, tempPathInComputer, tempFullPathName, ignore.case = TRUE)
 
             print("Launching Fiji now....")
+            print(FullPathFile)
             OpenInFiji(FullPathFile, input$fiji_binary)
             
         }
