@@ -1,21 +1,64 @@
+# To do:
+#
+# - Update htm_qc values (remove statement in addHeatmapCoordinates())
+#
+# - Color by batch, treatment, replicate, ....
+#
+# - Plotly lasso to select images
+#
+# - Box plot?
+
+
+# Initialize variables
+    hmsymbols <- c(ok=15, rejected=4)   # Symbols for heatmaps [squares and crosses]
+    plsymbols <- c(ok=16, rejected=4)   # Symbols for heatmaps [circles and crosses]
+
+    col_QC <- "htm_qc"                  # Name of the column with QC [TRUE/FALSE i.e. OK/Rejected]
+
+    
+    
 # Generate Plotly scatter plot
-scatterPlot <- function(df, x, y){
+scatterPlot <- function(df, batch_col, batch, x, y){
+    
+    # Subset batches
+    if(batch != "All batches"){
+        df <- df[df[[batch_col]] == batch,]
+    }
+    
+    # Make plot
     g <- ggplot(df, aes_string(x, y))
-    g <- g + geom_point()
+    g <- g + geom_point() +
+        ggtitle(batch)
     ggplotly(g)
 }
 
 # Generate Plotly jitter plot
-jitterPlot <- function(df, x, y){
+jitterPlot <- function(df, batch_col, batch, x, y){
+    
+    # Subset batches
+    if(batch != "All batches"){
+        df <- df[df[[batch_col]] == batch,]
+    }
+    
+    # Make plot
     g <- ggplot(df, aes_string(x, y))
-    g <- g + geom_jitter()
+    g <- g + geom_jitter() +
+        ggtitle(batch)
     ggplotly(g)
 }
 
 # Generate Plotly heatmap
-heatmapPlot <- function(){
-    
+heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1){
+    g <- ggplot(df, aes_string("heatX", "heatY", color = measurement))
+    g <- g + geom_point(size=symbolsize, shape=df$hmsymbols) + scale_colour_gradientn(colours = terrain.colors(10)) + 
+        ggtitle(batch) + 
+        theme(panel.grid = element_blank()) +
+        scale_x_continuous(breaks=1:ncolumns) + 
+        scale_y_continuous(breaks = 1:nrows, labels = LETTERS[nrows:1]) + 
+        theme(axis.title.x=element_blank(), axis.title.y=element_blank())
+    ggplotly(g)
 }
+
 
 
 
@@ -50,7 +93,7 @@ heatmapCoord <- function(WellX, WellY, PosX, PosY, subposjitter = 0.2){
         for (j in 1:WellX){
             temp <- which(wellLayout == wellLayout[i,j], arr.ind=TRUE)
             WellCenters <- rbind(WellCenters, 
-                                 data.frame(wellnum = wellLayout[i,j], X = temp[1,"col"], Y = -temp[1,"row"]+r+1)
+                                 data.frame(wellnum = wellLayout[i,j], X = temp[1,"col"], Y = -temp[1,"row"]+WellY+1)
             )
         }
     }
@@ -87,3 +130,30 @@ heatmapCoord <- function(WellX, WellY, PosX, PosY, subposjitter = 0.2){
     row.names(temp) <- NULL
     temp
 }
+
+# Annotate a data frame with coordinates for heatmap plotting
+addHeatmapCoordinates <- function(df, dfCoords, batch_col, batch, col_Well, col_Pos){
+
+    if(batch == "All batches") return(NULL)
+    
+    df <- df[df[[batch_col]] == batch,]
+    
+    df$heatX <- NA
+    df$heatY <- NA
+#remove this asap#####################################################
+    df[col_QC] <- TRUE
+    df$hmsymbols <- hmsymbols["ok"]
+    
+    for(i in 1:nrow(df)){
+        w  <- df[i,col_Well]
+        p  <- df[i,col_Pos]
+        xy <- dfCoords[dfCoords$wellnum == w & dfCoords$posnum == p, c("X", "Y")]
+        
+        df[i, "heatX"] <- xy[1,"X"]
+        df[i, "heatY"] <- xy[1,"Y"]
+        df[i, "hmsymbols"] <- ifelse(df[i,col_QC], hmsymbols["ok"], hmsymbols["rejected"])
+    }
+    
+    df
+}
+

@@ -1,7 +1,7 @@
 shinyUI(pageWithSidebar(
     
     
-    headerPanel("Data visualization"),
+    headerPanel("shinyHTM"),
     
     
     sidebarPanel(
@@ -10,12 +10,12 @@ shinyUI(pageWithSidebar(
         fileInput('file1', 'Choose File', accept=c('.csv')),
         hr(),
         
-        selectInput("plotType", label = h5("Plot Type"), choices = c("Scatter plot", "Jitter plot", "Heatmap [NOT WORKING]")),
+        selectInput("plotType", label = h5("Plot Type"), choices = c("Scatter plot", "Jitter plot", "Heatmap")),
         hr(),
         
-
         uiOutput("selectX"),
         uiOutput("selectY"),
+        uiOutput("selectBatch"),
         hr()
         
     ),
@@ -32,10 +32,10 @@ shinyUI(pageWithSidebar(
                      h2("Settings"),
                      
                      h3("Select column names containing..."),
-                     uiOutput("selectTreatment"),
-                     uiOutput("selectBatch"),
-                     uiOutput("selectWellCoord"),
-                     uiOutput("selectPosCoord"),
+                     uiOutput("colNameTreatment"),
+                     uiOutput("colBatchName"),
+                     uiOutput("colNameWell"),
+                     uiOutput("colNamePos"),
                      hr(),
                      
                      h3("Click & view settings"),
@@ -50,10 +50,12 @@ shinyUI(pageWithSidebar(
                      hr(),
                      
                      h3("Heatmap settings"),
-                     numericInput("wells_X", "Number positions X", 24),
-                     numericInput("wells_Y", "Number positions Y", 16),
-                     numericInput("npos_X", "Number subpositions X", 2),
-                     numericInput("npos_Y", "Number subpositions Y", 2)
+                     numericInput("wells_Y", "Number of Rows", 16),
+                     numericInput("wells_X", "Number of Columns", 24),
+                     numericInput("npos_Y", "Number of subposition Rows", 2),
+                     numericInput("npos_X", "Number of subposition Columns", 2),
+                     sliderInput("squaredodge", "Separation between positions", min=0, max=0.5, value=0.2, step=0.1),
+                     sliderInput("squaresize", "Square size", min=0.5, max=5, value=1, step=0.5)
             ),
             
             tabPanel("Data table",
