@@ -14,6 +14,8 @@ shinyServer(function(input, output){
             return(selectInput("Xaxis", "X axis:", as.list(names(data()))))
         } else if(input$plotType == "Jitter plot"){
             return(selectInput("Xaxis", "Categories:", as.list(names(data()))))
+        } else if (input$plotType == "Boxplot"){
+            return(selectInput("Xaxis", "Categories:", as.list(names(data()))))
         } else if (input$plotType == "Heatmap"){
             return(NULL)
         }
@@ -22,6 +24,8 @@ shinyServer(function(input, output){
         if(input$plotType == "Scatter plot"){
             return(selectInput("Yaxis", "Y axis:", as.list(names(data()))))
         } else if(input$plotType == "Jitter plot"){
+            return(selectInput("Yaxis", "Values:", as.list(names(data()))))
+        } else if (input$plotType == "Boxplot"){
             return(selectInput("Yaxis", "Values:", as.list(names(data()))))
         } else if (input$plotType == "Heatmap"){
             return(selectInput("Yaxis", "Values:", as.list(names(data()))))
@@ -78,6 +82,8 @@ shinyServer(function(input, output){
                             scatterPlot(data(), input$colBatch, input$batch, input$Xaxis, input$Yaxis)
                         } else if (input$plotType == "Jitter plot"){
                             jitterPlot(data(), input$colBatch, input$batch, input$Xaxis, input$Yaxis)
+                        } else if (input$plotType == "Boxplot"){
+                            boxPlot(data(), input$colBatch, input$batch, input$Xaxis, input$Yaxis)
                         } else if (input$plotType == "Heatmap"){
                             heatmapPlot(hm2(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize)
                         }

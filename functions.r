@@ -47,6 +47,21 @@ jitterPlot <- function(df, batch_col, batch, x, y){
     ggplotly(g)
 }
 
+# Generate Plotly boxplot
+boxPlot <- function(df, batch_col, batch, x, y){
+    
+    # Subset batches
+    if(batch != "All batches"){
+        df <- df[df[[batch_col]] == batch,]
+    }
+    
+    # Make plot
+    g <- ggplot(df, aes_string(x, y))
+    g <- g + geom_boxplot() +
+        ggtitle(batch)
+    ggplotly(g)
+}
+
 # Generate Plotly heatmap
 heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1){
     g <- ggplot(df, aes_string("heatX", "heatY", color = measurement))
