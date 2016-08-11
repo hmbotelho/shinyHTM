@@ -5,8 +5,6 @@
 # - Color by batch, treatment, replicate, ....
 #
 # - Plotly lasso to select images
-#
-# - Box plot?
 
 
 # Initialize variables
@@ -65,7 +63,8 @@ boxPlot <- function(df, batch_col, batch, x, y){
 # Generate Plotly heatmap
 heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1){
     g <- ggplot(df, aes_string("heatX", "heatY", color = measurement))
-    g <- g + geom_point(size=symbolsize, shape=df$hmsymbols) + scale_colour_gradientn(colours = terrain.colors(10)) + 
+    g <- g + geom_point(size=symbolsize, shape=df$hmsymbols) + 
+        scale_color_gradient2(midpoint=mean(df[[measurement]]), low="blue", mid="white", high="red") +
         ggtitle(batch) + 
         theme(panel.grid = element_blank()) +
         scale_x_continuous(breaks=1:ncolumns) + 
