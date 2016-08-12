@@ -11,37 +11,32 @@
     hmsymbols <- c(ok=15, rejected=4)   # Symbols for heatmaps [squares and crosses]
     plsymbols <- c(ok=16, rejected=4)   # Symbols for heatmaps [circles and crosses]
 
-    col_QC <- "htm_qc"                  # Name of the column with QC [TRUE/FALSE i.e. OK/Rejected]
+###### remove this asap
+    col_QC <- "htm_qc"
 
     
-    
-# Generate Plotly scatter plot
-scatterPlot <- function(df, batch_col, batch, x, y){
-    
+
+# Generate Plotly scatter/jitter plot
+pointPlot <- function(df, batch_col, batch, x, y){
+        
     # Subset batches
     if(batch != "All batches"){
         df <- df[df[[batch_col]] == batch,]
     }
-    
-    # Make plot
-    g <- ggplot(df, aes_string(x, y))
-    g <- g + geom_point() +
-        ggtitle(batch)
-    ggplotly(g)
-}
 
-# Generate Plotly jitter plot
-jitterPlot <- function(df, batch_col, batch, x, y){
+
+    # Define the data to be plotted
+    g <- ggplot(df, aes_string(x, y)) + ggtitle(batch)
+
     
-    # Subset batches
-    if(batch != "All batches"){
-        df <- df[df[[batch_col]] == batch,]
+    # Define the plot type (scatter vs jitter) depending on the data types
+    g <- if(class(df[[x]]) == "numeric" & class(df[[y]]) == "numeric"){
+        g + geom_point()
+    } else{
+        g + geom_jitter()
     }
-    
-    # Make plot
-    g <- ggplot(df, aes_string(x, y))
-    g <- g + geom_jitter() +
-        ggtitle(batch)
+
+
     ggplotly(g)
 }
 
@@ -72,6 +67,7 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1){
         theme(axis.title.x=element_blank(), axis.title.y=element_blank())
     ggplotly(g)
 }
+
 
 
 
@@ -154,7 +150,7 @@ addHeatmapCoordinates <- function(df, dfCoords, batch_col, batch, col_Well, col_
     
     df$heatX <- NA
     df$heatY <- NA
-#remove this asap#####################################################
+    #remove this asap#####################################################
     df[col_QC] <- TRUE
     df$hmsymbols <- hmsymbols["ok"]
     

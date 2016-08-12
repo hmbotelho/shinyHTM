@@ -46,6 +46,6 @@ The app runs in   a browser window like so:
 * Open R or RStudio 
 * Write the following commands. Adapt to your case.
 ``
-setwd("folder_with_unzipped_files")  
+setwd("folder_with_unzipped_files");  
 source("run.r")
 ``
