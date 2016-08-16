@@ -53,11 +53,11 @@ shinyUI(navbarPage("shinyHTM",
         
         fluidRow(
             
-            column(3,
-                selectInput("plotType", label = h5("Plot Type"), choices = c("Scatter plot", "Boxplot", "Heatmap"))
+            column(2,
+                selectInput("plotType", label = "Plot Type", choices = c("Scatter plot", "Boxplot", "Heatmap"))
             ),
             
-            column(3,
+            column(7,
                 uiOutput("UIselectXaxis"),
                 uiOutput("UIselectYaxis")
             ),

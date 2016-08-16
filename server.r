@@ -3,11 +3,6 @@
 #
 # Heatmaps are built from a reactive data.frame 'htmHM()'
 #
-# These are the columns being added to the 'htm' data.frame:
-# 
-# - HTM_QC
-# - HTM_norm__z_score__Median_cell_final_Math_ratio
-#
 # ==========================================================================
 
 
@@ -18,11 +13,15 @@ source("functions.r")
 options(shiny.maxRequestSize=2*1024^3)
 
 # Initialize variables
+rm(htm, htmHM, QCsettings)
+
 QCsettings <<- data.frame(type = character(), 
                          measurement = character(), 
                          minimum = character(), 
                          maximum = character(),
                          stringsAsFactors = FALSE)
+
+col_QC <- "HTM_QC"
 
 
 shinyServer(function(input, output){
@@ -39,22 +38,27 @@ shinyServer(function(input, output){
     # Plot variables
     output$UIselectXaxis <- renderUI({
         input$file1
+        input$applyNorm
+        
         switch(input$plotType,
-               "Scatter plot" = return(selectInput("Xaxis", "X axis:", as.list(names(htm)))),
-               "Boxplot"      = return(selectInput("Xaxis", "Categories:", as.list(names(htm)))),
+               "Scatter plot" = return(selectInput("Xaxis", "X axis:", choices = as.list(names(htm)), width = "200%")),
+               "Boxplot"      = return(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%")),
                "Heatmap"      = return(NULL)
         )
     })
     output$UIselectYaxis <- renderUI({
         input$file1
+        input$applyNorm
+        
         switch(input$plotType,
-               "Scatter plot" = return(selectInput("Yaxis", "Y axis:", as.list(names(htm)))),
-               "Boxplot"      = return(selectInput("Yaxis", "Values:", as.list(names(htm)))),
-               "Heatmap" =      return(selectInput("Yaxis", "Values:", as.list(names(htm))))
+               "Scatter plot" = return(selectInput("Yaxis", "Y axis:", choices = as.list(names(htm)), width = "200%")),
+               "Boxplot"      = return(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%")),
+               "Heatmap" =      return(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
         )
     })
     output$UIselectBatch <- renderUI({
         input$file1
+        
         selectInput("batch", "Show this batch:", as.list(c("All batches",unique(htm[[input$colBatch]]))))
     })
     
@@ -62,18 +66,26 @@ shinyServer(function(input, output){
     # Settings
     output$UIcolNameTreatment <- renderUI({
         input$file1
+        input$applyNorm
+        
         selectInput("colTreatment", "Treatment:", as.list(names(htm)))
     })
     output$UIcolNameBatch     <- renderUI({
         input$file1
+        input$applyNorm
+        
         selectInput("colBatch", "Batch:", as.list(names(htm)))
     })
     output$UIcolNameWell      <- renderUI({
         input$file1
+        input$applyNorm
+        
         selectInput("colWell", "Well coordinate:", as.list(names(htm)))
     })
     output$UIcolNamePos       <- renderUI({
         input$file1
+        input$applyNorm
+        
         selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)))
     })
     output$UIfiji_path        <- renderUI({
@@ -90,12 +102,6 @@ shinyServer(function(input, output){
     })
     
 
-    # Data table
-    observeEvent(input$file1, {
-        output$valuestable <- renderDataTable(htm)
-    })
-
-    
     # Heatmap-specific settings
     htmHM <<- reactive({
         if(input$plotType != "Heatmap") return(NULL)
@@ -118,12 +124,11 @@ shinyServer(function(input, output){
     # QC-specific settings
     output$UIQCfailedExperiments <- renderUI({
         input$file1
+        input$applyNorm
+        
         fluidRow(
-            column(2,
-                strong("Failed experiments")
-            ),
-            column(3,
-                selectInput("QCfailedExperiment", "Failed experiments:", htm[[input$colBatch]])
+            column(6,
+                selectInput("QCfailedExperiment", "Failed experiments:", htm[[input$colBatch]], width = "200%")
             ),
             column(2,
                 NULL
@@ -139,12 +144,11 @@ shinyServer(function(input, output){
     })
     output$UIQCnumeric           <- renderUI({
         input$file1
+        input$applyNorm
+        
         fluidRow(
-            column(2,
-                strong("Number-based QC")
-            ),
-            column(3,
-                selectInput("QCnumMeasurement", "Measurement:", as.list(names(htm)))
+            column(6,
+                selectInput("QCnumMeasurement", "Number-based QC:", as.list(names(htm)), width = "200%")
             ),
             column(2,
                 numericInput("QCnumMin", "Minimum:", value=1)
@@ -160,12 +164,11 @@ shinyServer(function(input, output){
     })
     output$UIQCtext              <- renderUI({
         input$file1
+        input$applyNorm
+        
         fluidRow(
-            column(2,
-                   strong("Text-based QC")
-            ),
-            column(3,
-                   selectInput("QCtxtMeasurement", "Measurement:", as.list(names(htm)))
+            column(6,
+                   selectInput("QCtxtMeasurement", "Failed images (text-based):", as.list(names(htm)), width = "200%")
             ),
             column(2,
                    textInput("QCtxtBad", "Value:")
@@ -296,43 +299,76 @@ shinyServer(function(input, output){
     output$UINormFeatures      <- renderUI({
         input$file1
         input$applySummary
+        
         selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), multiple = TRUE)
     })
     output$UINormDataTransform <- renderUI({
         input$file1
+        
         selectInput("NormDataTransform", "Data transformation", choices = list("None selected", "log2"))
     })
     output$UINormGradientCorr  <- renderUI({
         input$file1
-        selectInput("NormGradientCorr", "Batch-wise spatial gradient correction", choices = list("None selected", "median_polish", "median_7x7", "median_5x5", "median_3x3", "z_score_5x5"))
+        
+        selectInput("NormGradientCorr", "Batch-wise spatial gradient correction", choices = list("None selected", "median polish", "median 7x7", "median 5x5", "median 3x3", "z-score 5x5"))
     })
     output$UINormMethod        <- renderUI({
         input$file1
-        selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z_score", "robust_z_score", "subtract_mean_ctrl", "divide_by_mean_ctrl", "subtract_median_ctrl", "divide_by_median_ctrl"))
+        
+        selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"))
     })
     output$UINormNegCtrl       <- renderUI({
         input$file1
+        
         selectInput("NormNegCtrl", "Negative control", choices = as.list(sort(htm[[input$colTreatment]])))
     })
     
+    observeEvent(input$applyNorm,{
+        htm <<- htmNormalization(data                = htm,
+                                 measurements        = input$NormFeatures,
+                                 col_Experiment      = input$colBatch,
+                                 transformation      = input$NormDataTransform,
+                                 gradient_correction = input$NormGradientCorr,
+                                 normalisation       = input$NormMethod,
+                                 negcontrol          = input$NormNegCtrl,
+                                 col_QC              = col_QC,
+                                 col_Well            = input$colWell,
+                                 col_Treatment       = input$colTreatment,
+                                 num_WellX           = input$wells_X,
+                                 num_WellY           = input$wells_Y)
+    })
+
     
     # Treatment summary
     output$UISummaryMeasurements <- renderUI({
         input$file1
         input$applyNorm
+        
         selectInput("SummaryMeasurements", "Measurements to be analyzed", choices = as.list(names(htm)), multiple = TRUE)
     })
     output$UISummaryNegCtrl      <- renderUI({
         input$file1
+        input$applyNorm
+        
         selectInput("SummaryNegCtrl", "Negative control", choices = as.list(sort(htm[[input$colTreatment]])))
     })
     output$UISummaryPosCtrl      <- renderUI({
         input$file1
+        input$applyNorm
+        
         selectInput("SummaryPosCtrl", "Positive control", choices = as.list(sort(htm[[input$colTreatment]])))
     })
     output$UISummaryNumObjects   <- renderUI({
         input$file1
         input$applyNorm
+        
         selectInput("SummaryNumObjects", "Number of objects per image", choices = as.list(names(htm)))
+    })
+    
+    
+    # Data table
+    observeEvent(input$file1, {
+        input$applyNorm
+        output$valuestable <- renderDataTable(htm)
     })
 })
