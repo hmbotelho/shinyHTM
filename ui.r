@@ -14,17 +14,17 @@ shinyUI(navbarPage("shinyHTM",
     tabPanel("2. Configure settings",
         h2("Settings"),
         h3("Select column names containing..."),
-        uiOutput("colNameTreatment"),
-        uiOutput("colBatchName"),
-        uiOutput("colNameWell"),
-        uiOutput("colNamePos"),
+        uiOutput("UIcolNameTreatment"),
+        uiOutput("UIcolNameBatch"),
+        uiOutput("UIcolNameWell"),
+        uiOutput("UIcolNamePos"),
         hr(),
         
         h3("Click & view settings"),
-        uiOutput("fiji_path"),
+        uiOutput("UIfiji_path"),
         hr(),
         
-        uiOutput("availableimages"),
+        uiOutput("UIavailableimages"),
         hr(),
         
         textInput("pathInTable", "Image root folder name in table", "c:\\tutorial\\myplate_01"),
@@ -58,12 +58,12 @@ shinyUI(navbarPage("shinyHTM",
             ),
             
             column(3,
-                uiOutput("selectX"),
-                uiOutput("selectY")
+                uiOutput("UIselectXaxis"),
+                uiOutput("UIselectYaxis")
             ),
             
             column(3,
-                uiOutput("selectBatch")
+                uiOutput("UIselectBatch")
             )
         )
         
@@ -73,21 +73,48 @@ shinyUI(navbarPage("shinyHTM",
 
 
     tabPanel("4. Quality Control",
-        p("To be added...")
+        uiOutput("UIQCfailedExperiments"),
+        uiOutput("UIQCnumeric"),
+        uiOutput("UIQCtext"),
+        hr(),
+        
+        fluidRow(
+            column(5,
+                uiOutput("QCtable")
+            ),
+            column(2,
+                uiOutput("UIQCactive")
+            )
+        ),
+        
+        hr(),
+        actionButton("applyQC", "Apply QCs now", icon = icon("paper-plane-o"))
     ),
 
 
 
 
     tabPanel("5. Normalization",
-        p("To be added...")
+        uiOutput("UINormFeatures"),
+        uiOutput("UINormDataTransform"),
+        uiOutput("UINormGradientCorr"),
+        uiOutput("UINormMethod"),
+        uiOutput("UINormNegCtrl"),
+        checkboxInput("NormCombinedVecror", "Compute combined vector for all selected measurements?"),
+        selectInput("NormMultiply", "Multiply with cos(tetha)^N along average treatment effect; N=", choices = list(0,1,2,4,8,16,32)),
+        hr(),
+        actionButton("applyNorm", "Normalize [Not working]", icon = icon("paper-plane-o"))
     ),
 
 
 
 
     tabPanel("6. Treatment summary",
-        p("To be added...")
+        uiOutput("UISummaryMeasurements"),
+        uiOutput("UISummaryNegCtrl"),
+        uiOutput("UISummaryPosCtrl"),
+        uiOutput("UISummaryNumObjects"),
+        actionButton("applySummary", "Analyze [Not working]", icon = icon("paper-plane-o"))
     ),
 
 

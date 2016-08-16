@@ -1,18 +1,9 @@
 # To do:
 #
-# - Update htm_qc values (remove statement in addHeatmapCoordinates())
-#
 # - Color by batch, treatment, replicate, ....
-#
 # - Plotly lasso to select images
 
 
-# Initialize variables
-    hmsymbols <- c(ok=15, rejected=4)   # Symbols for heatmaps [squares and crosses]
-    plsymbols <- c(ok=16, rejected=4)   # Symbols for heatmaps [circles and crosses]
-
-###### remove this asap
-    col_QC <- "htm_qc"
 
     
 
@@ -89,7 +80,7 @@ OpenInFiji <- function(filePath, FijiPath = "C:\\Fiji.app\\ImageJ-win64.exe"){
 }
 
 # Generate coordinates for heatmap
-heatmapCoord <- function(WellX, WellY, PosX, PosY, subposjitter = 0.2){
+generateHeatmapCoordinates <- function(WellX, WellY, PosX, PosY, subposjitter = 0.2){
     
     numWells <- WellX * WellY
     numSubpos <- PosX * PosY
@@ -137,23 +128,30 @@ heatmapCoord <- function(WellX, WellY, PosX, PosY, subposjitter = 0.2){
         temp <- rbind(temp, localcenter)
     }
     
+    temp <- temp[, c("wellnum", "posnum", "X", "Y")]
     row.names(temp) <- NULL
     temp
 }
 
-# Annotate a data frame with coordinates for heatmap plotting
-addHeatmapCoordinates <- function(df, dfCoords, batch_col, batch, col_Well, col_Pos){
+# Creates a 1-batch data.frame with all additional data required for a
+makeHeatmapDataFrame <- function(df, WellX, WellY, PosX, PosY, subposjitter = 0.2, batch_col, batch, col_Well, col_Pos, col_QC = "HTM_QC"){
 
     if(batch == "All batches") return(NULL)
-    
+
+    # Subset data frame
     df <- df[df[[batch_col]] == batch,]
+
+    # Calculate coordinates for heatmap
+    dfCoords <- generateHeatmapCoordinates(WellX, WellY, PosX, PosY, subposjitter)
     
-    df$heatX <- NA
-    df$heatY <- NA
-    #remove this asap#####################################################
-    df[col_QC] <- TRUE
-    df$hmsymbols <- hmsymbols["ok"]
+    # Initialize variables
+    hmsymbols <- c(ok=15, rejected=4)   # Symbols for heatmaps [squares and crosses]
+    plsymbols <- c(ok=16, rejected=4)   # Symbols for heatmaps [circles and crosses]
     
+    # Add heatmap symbols
+    df$hmsymbols <- sapply(df[[col_QC]], function(x) ifelse(x, hmsymbols["ok"],hmsymbols["rejected"]))
+
+    # Add heatmap coordinates
     for(i in 1:nrow(df)){
         w  <- df[i,col_Well]
         p  <- df[i,col_Pos]
@@ -161,9 +159,43 @@ addHeatmapCoordinates <- function(df, dfCoords, batch_col, batch, col_Well, col_
         
         df[i, "heatX"] <- xy[1,"X"]
         df[i, "heatY"] <- xy[1,"Y"]
-        df[i, "hmsymbols"] <- ifelse(df[i,col_QC], hmsymbols["ok"], hmsymbols["rejected"])
     }
     
     df
 }
 
+
+
+
+
+# Apply QC
+applyQC <- function(df, dfQC){
+
+# This an example of how the 'dfQC' data.frame needs to look like
+# 'measurement' is the name of one of the columns in 'df'
+# All values in 'df' are text
+# dfQC <- data.frame(type = c("Numeric QC", "Numeric QC", "Text QC", "Failed experiment"), measurement = c("Count_cell_all", "Count_cell_final", "FileName_PM", "Metadata_platePath"), minimum = c("50", "20", "image1.tif", "myplate_01"), maximum = c("500", "100", "image1.tif", "myplate_01"), stringsAsFactors = FALSE)
+
+    # Make sure the data frame only contains character variables (no factors wanted!)
+    dfQC[] <- lapply(dfQC, as.character)
+    
+    apply(df, 1, function(x){
+
+        QCoverall <- NULL
+        for(i in 1:nrow(dfQC)){
+            
+            testvalue <- x[dfQC[i, "measurement"]]
+            
+            temp <- switch (as.character(dfQC[i,"type"]),
+                "Numeric QC"        = as.numeric(testvalue) >= as.numeric(dfQC[i, "minimum"]) & as.numeric(testvalue) <= as.numeric(dfQC[i, "maximum"]),
+                "Text QC"           = testvalue != dfQC[i, "minimum"],
+                "Failed experiment" = testvalue != dfQC[i, "minimum"]
+            )
+            
+            QCoverall <- c(QCoverall, temp)
+        }
+        
+        all(QCoverall)
+    })
+    
+}
