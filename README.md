@@ -31,7 +31,8 @@ The app runs in   a browser window like so:
 * Hover mouse over plot to read the data
 * Show all data points or only individual plates
 * Contains a sample dataset
-* _Soon to come:_ Data normalization algorithms
+* Data normalization
+* __Soon to come:__ treatment summary
 
 
 ## Requirements
