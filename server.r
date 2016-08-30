@@ -15,10 +15,11 @@ options(shiny.maxRequestSize=2*1024^3)
 # Initialize variables
 rm(htm, htmHM, QCsettings)
 
-QCsettings <<- data.frame(type = character(), 
+QCsettings <<- data.frame(type       = character(), 
                          measurement = character(), 
-                         minimum = character(), 
-                         maximum = character(),
+                         minimum     = character(), 
+                         maximum     = character(),
+                         failed      = integer(),
                          stringsAsFactors = FALSE)
 
 col_QC <- "HTM_QC"
@@ -188,66 +189,81 @@ shinyServer(function(input, output){
             type        = "Failed experiment",
             measurement = isolate(input$colBatch),
             minimum     = isolate(input$QCfailedExperiment),
-            maximum     = isolate(input$QCfailedExperiment)
+            maximum     = isolate(input$QCfailedExperiment),
+            failed      = sum(htm[[isolate(input$colBatch)]] == isolate(input$QCfailedExperiment))
         )
         QCsettings <<- rbind(QCsettings, temp)
         
         # Update show/remove QC
-        output$QCtable    <- renderTable(QCsettings)
+        output$QCtable    <- renderTable(QCsettings[,1:4])
         output$UIQCactive <- renderUI({
             checkboxGroupInput("QCcheckGroup",
                                label = strong("Disable this QC"), 
                                choices = as.list(row.names(QCsettings))
             )
         })
+        
+        # Reset QC report
+        output$QCreport <- renderPrint("")
     })
     observeEvent(input$QCAddnumeric,{
         temp <- data.frame(
                     type        = "Numeric QC",
                     measurement = isolate(input$QCnumMeasurement),
                     minimum     = as.character(isolate(input$QCnumMin)),
-                    maximum     = as.character(isolate(input$QCnumMax))
+                    maximum     = as.character(isolate(input$QCnumMax)),
+                    failed      = sum((htm[[isolate(input$QCnumMeasurement)]] < isolate(input$QCnumMin) | htm[[isolate(input$QCnumMeasurement)]] > isolate(input$QCnumMax)) & !is.na(htm[[isolate(input$QCnumMeasurement)]]))
                 )
         QCsettings <<- rbind(QCsettings, temp)
         
         # Update show/remove QC
-        output$QCtable    <- renderTable(QCsettings)
+        output$QCtable    <- renderTable(QCsettings[,1:4])
         output$UIQCactive <- renderUI({
             checkboxGroupInput("QCcheckGroup",
                                label = strong("Disable this QC"), 
                                choices = as.list(row.names(QCsettings))
             )
         })
+        
+        # Reset QC report
+        output$QCreport <- renderPrint("")
     })
     observeEvent(input$QCAddtxt,{
         temp <- data.frame(
             type        = "Text QC",
             measurement = isolate(input$QCtxtMeasurement),
             minimum     = isolate(input$QCtxtBad),
-            maximum     = isolate(input$QCtxtBad)
+            maximum     = isolate(input$QCtxtBad),
+            failed      = sum(htm[[isolate(input$QCtxtMeasurement)]] == isolate(input$QCtxtBad))
         )
         QCsettings <<- rbind(QCsettings, temp)
         
         # Update show/remove QC
-        output$QCtable    <- renderTable(QCsettings)
+        output$QCtable    <- renderTable(QCsettings[,1:4])
         output$UIQCactive <- renderUI({
             checkboxGroupInput("QCcheckGroup",
                                label = strong("Disable this QC"), 
                                choices = as.list(row.names(QCsettings))
             )
         })
+        
+        # Reset QC report
+        output$QCreport <- renderPrint("")
     })    
     observeEvent(input$QCcheckGroup, {
         QCsettings <<- QCsettings[row.names(QCsettings) != input$QCcheckGroup,]
         
         # Update show/remove QC
-        output$QCtable    <- renderTable(QCsettings)
+        output$QCtable    <- renderTable(QCsettings[,1:4])
         output$UIQCactive <- renderUI({
             checkboxGroupInput("QCcheckGroup",
                                label = strong("Disable this QC"), 
                                choices = as.list(row.names(QCsettings))
             )
         })
+        
+        # Reset QC report
+        output$QCreport <- renderPrint("")
     })
     observeEvent(input$applyQC,{
         
@@ -256,6 +272,42 @@ shinyServer(function(input, output){
             htm$HTM_QC <- temp
             htm <<- htm   
         }
+        
+        # Output QC summary to the R console
+        generateQCreport <- function(){
+            print("Performing QCs:")
+            print("QC:")
+            for(i in 1:nrow(QCsettings)){
+                switch(as.character(QCsettings[i, "type"]),
+                       "Failed experiment" = {
+                           print("Failed experiment:")
+                           print(paste0("  Batch: ", QCsettings[i, "minimum"]))
+                       },
+                       "Numeric QC" = {
+                           print(paste0("Measurement: ", QCsettings[i, "measurement"]))
+                           print(paste0("  Allowed range: ", QCsettings[i, "minimum"], " ... ", QCsettings[i, "maximum"], " and not NA."))
+                       },
+                       "Text QC" = {
+                           print(paste0("Measurement: ", QCsettings[i, "measurement"]))
+                           print(paste0("  Reject text: ", QCsettings[i, "minimum"]))
+                       }
+                )
+                
+                
+                print(paste0("  Total: ", nrow(htm)))
+                print(paste0("  Failed: ", QCsettings[i, "failed"]))
+                print("")
+            }
+            print("Summary of all QCs:")
+            print(paste0("  Total (all QCs): ", nrow(htm)))
+            print(paste0("  Failed (all Qcs): ", sum(htm$HTM_QC)))
+            print("")
+            print(paste0("The column ", col_QC, " has been updated."))
+        }
+        generateQCreport()
+        # Output QC summary to the html page
+        output$QCreport <- renderPrint(generateQCreport())
+        
     })
     
     

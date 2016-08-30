@@ -88,7 +88,10 @@ shinyUI(navbarPage("shinyHTM",
         ),
         
         hr(),
-        actionButton("applyQC", "Apply QCs now", icon = icon("paper-plane-o"))
+        actionButton("applyQC", "Apply QCs now", icon = icon("paper-plane-o")),
+        
+        p(""),
+        verbatimTextOutput("QCreport")
     ),
 
 
