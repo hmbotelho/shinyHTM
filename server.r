@@ -16,7 +16,6 @@ options(shiny.maxRequestSize=2*1024^3)
 
 # Initialize variables
 if(exists("htm")) rm(htm)
-if(exists("htmHM")) rm(htmHM)
 if(exists("QCsettings")) rm(QCsettings)
 
 QCsettings <<- data.frame(type       = character(), 
@@ -30,42 +29,15 @@ col_QC <- "HTM_QC"
 
 
 shinyServer(function(input, output){
-    
-    # Read input file
-    # Initialize the 'master' htm data frame as a global variable
+
+
+    # File Input
     observeEvent(input$file1, {
         htm <- read.csv(input$file1$datapath, stringsAsFactors = FALSE)
-        htm$HTM_QC <- TRUE
+        htm[[col_QC]] <- TRUE
         htm <<- htm
     })
-    
-    
-    # Plot variables
-    output$UIselectXaxis <- renderUI({
-        input$file1
-        input$applyNorm
-        
-        switch(input$plotType,
-               "Scatter plot" = return(selectInput("Xaxis", "X axis:", choices = as.list(names(htm)), width = "200%")),
-               "Boxplot"      = return(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%")),
-               "Heatmap"      = return(NULL)
-        )
-    })
-    output$UIselectYaxis <- renderUI({
-        input$file1
-        input$applyNorm
-        
-        switch(input$plotType,
-               "Scatter plot" = return(selectInput("Yaxis", "Y axis:", choices = as.list(names(htm)), width = "200%")),
-               "Boxplot"      = return(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%")),
-               "Heatmap" =      return(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
-        )
-    })
-    output$UIselectBatch <- renderUI({
-        input$file1
-        
-        selectInput("batch", "Show this batch:", as.list(c("All batches",unique(htm[[input$colBatch]]))))
-    })
+
     
     
     # Settings
@@ -97,7 +69,7 @@ shinyServer(function(input, output){
         if (Sys.info()['sysname'] == "Windows"){
             return(textInput("fiji_binary", "Path to Fiji (only necessary for Windows)", value = "C:/Fiji.app/ImageJ-win64.exe"))
         } else {
-                return("/Applications/Fiji.app/Contents/MacOS/ImageJ-macosx")
+            return("/Applications/Fiji.app/Contents/MacOS/ImageJ-macosx")
         }
     })
     output$UIavailableimages  <- renderUI({
@@ -106,26 +78,78 @@ shinyServer(function(input, output){
         checkboxGroupInput("images2display", "Select images to be viewed upon clicking within a plot", as.list(img_names))
     })
     
+    
+    
+    # Plot settings
+    output$UIselectBatch <- renderUI({
+        input$file1
+        selectInput("batch", "Show this batch:", as.list(c("All batches",unique(htm[[input$colBatch]]))))
+    })
+    
+    observeEvent(input$plotType,{
 
-    # Heatmap-specific settings
-    htmHM <<- reactive({
-        if(input$plotType != "Heatmap") return(NULL)
+        # Display plot control widgets depending on which plot type is selected
+        switch(input$plotType,
+            "Scatter plot" = {
+                output$UIselectXaxis = renderUI(selectInput("Xaxis", "X axis:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectYaxis = renderUI(selectInput("Yaxis", "Y axis:", choices = as.list(names(htm)), width = "200%"))
+                
+                output$UIPointplotsplitBy = renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
+                
+                output$UIBoxplothighlightCenter = renderUI(NULL)
+                output$UIBoxplotsplitBy = renderUI(NULL)
+            },
+            "Boxplot"      = {
+                output$UIselectXaxis = renderUI(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectYaxis = renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
+                
+                output$UIPointplotsplitBy = renderUI(NULL)
+                
+                output$UIBoxplothighlightCenter = renderUI(selectInput("BoxplothighlightCenter", "Highlight box center?", choices = list("No", "Mean", "Median")))
+                output$UIBoxplotsplitBy = renderUI(selectInput("BoxplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
+            },
+            "Heatmap"      = {
+                output$UIselectXaxis = renderUI(NULL)
+                output$UIselectYaxis = renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
+                
+                output$UIPointplotsplitBy = renderUI(NULL)
+                
+                output$UIBoxplothighlightCenter = renderUI(NULL)
+                output$UIBoxplotsplitBy = renderUI(NULL)
+            }
+        )
+    })
+    
+    htmHM <- reactive({
+
         if(input$batch == "All batches") return(NULL)
         
-        makeHeatmapDataFrame(df  = htm, 
+        makeHeatmapDataFrame(df           = htm, 
                              WellX        = input$wells_X,
-                             WellY        = input$wells_Y, 
-                             PosX         = input$npos_X, 
-                             PosY         = input$npos_Y, 
-                             subposjitter = input$squaredodge, 
-                             batch_col    = input$colBatch, 
-                             batch        = input$batch, 
-                             col_Well     = input$colWell, 
-                             col_Pos      = input$colPos, 
-                             col_QC       = "HTM_QC")
-        })
-    
+                             WellY        = input$wells_Y,
+                             PosX         = input$npos_X,
+                             PosY         = input$npos_Y,
+                             subposjitter = input$squaredodge,
+                             batch_col    = input$colBatch,
+                             batch        = input$batch,
+                             col_Well     = input$colWell,
+                             col_Pos      = input$colPos,
+                             col_QC       = col_QC)
+    })
 
+
+    
+    # Plot
+    output$plot <- renderPlotly({
+        switch(input$plotType,
+               "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, input$PointplotsplitBy),
+               "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, input$BoxplothighlightCenter, input$BoxplotsplitBy),
+               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize)
+        )
+    })
+
+    
+    
     # QC-specific settings
     output$UIQCfailedExperiments <- renderUI({
         input$file1
@@ -332,16 +356,7 @@ shinyServer(function(input, output){
         
     })
     
-    
-    # Plot
-    output$plot <- renderPlotly({
-        switch(input$plotType,
-               "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis),
-               "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis),
-               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize)
-        )
-    })
-    
+
     
     # Plot-Fiji interaction
     output$selection <- renderPrint({
@@ -367,6 +382,7 @@ shinyServer(function(input, output){
             
         }
     })
+
     
     
     # Normalization settings
@@ -374,7 +390,7 @@ shinyServer(function(input, output){
         input$file1
         input$applySummary
         
-        selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), multiple = TRUE)
+        selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), multiple = FALSE)
     })
     output$UINormDataTransform <- renderUI({
         input$file1
@@ -412,6 +428,7 @@ shinyServer(function(input, output){
                                  num_WellY           = input$wells_Y)
     })
 
+
     
     # Treatment summary
     output$UISummaryMeasurements <- renderUI({
@@ -441,18 +458,23 @@ shinyServer(function(input, output){
     })
     
     observeEvent(input$SummaryMeasurements,{
+        output$TreatmentSummaryTable <- renderDataTable(data.frame())
         output$SummaryReport <- renderPrint("")
     })
     observeEvent(input$SummaryNegCtrl,{
+        output$TreatmentSummaryTable <- renderDataTable(data.frame())
         output$SummaryReport <- renderPrint("")
     })
     observeEvent(input$SummaryPosCtrl,{
+        output$TreatmentSummaryTable <- renderDataTable(data.frame())
         output$SummaryReport <- renderPrint("")
     })
     observeEvent(input$SummaryNumObjects,{
+        output$TreatmentSummaryTable <- renderDataTable(data.frame())
         output$SummaryReport <- renderPrint("")
     })
     observeEvent(input$applySummary,{
+        
         temp <- htmTreatmentSummary(data                 = htm,
                                     measurements         = input$SummaryMeasurements,
                                     col_Experiment       = input$colBatch,
@@ -462,13 +484,20 @@ shinyServer(function(input, output){
                                     negative_ctrl        = input$SummaryNegCtrl,
                                     positive_ctrl        = input$SummaryPosCtrl,
                                     excluded_Experiments = "")
+
+        # Display the summary table in the html page
+        output$TreatmentSummaryTable <- renderDataTable(temp[,c("treatment", "median__means", "t_test__p_value", "t_test__signCode", "numObjectsOK", "numImagesOK", "numReplicatesOK")])
         
         # Save summary table
         path <- tclvalue(tkgetSaveFile(initialfile = paste0("TreatmentSummary--", input$SummaryMeasurements, ".csv")))
         write.csv(temp, path, row.names = FALSE)
         
         generateSummaryReport <- function(){
-            print(paste0("Saved summary table to ", path))
+            if(path == ""){
+                print("Did not save treatment summary table!")
+            } else{
+                print(paste0("Saved summary table to ", path))
+            }
         }
         
         # Echo Summary messages to the R console and html page
@@ -476,6 +505,7 @@ shinyServer(function(input, output){
         output$SummaryReport <- renderPrint(generateSummaryReport())
         
     })
+
     
     
     # Data table

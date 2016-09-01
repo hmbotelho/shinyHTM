@@ -59,7 +59,16 @@ shinyUI(navbarPage("shinyHTM",
             
             column(7,
                 uiOutput("UIselectXaxis"),
-                uiOutput("UIselectYaxis")
+                uiOutput("UIselectYaxis"),
+                
+                # Scatter plot customization options
+                br(),br(),
+                uiOutput("UIPointplotsplitBy"),
+                
+                # Boxplot customziation options
+                br(),br(),
+                uiOutput("UIBoxplothighlightCenter"),
+                uiOutput("UIBoxplotsplitBy")
             ),
             
             column(3,
@@ -119,8 +128,13 @@ shinyUI(navbarPage("shinyHTM",
         uiOutput("UISummaryNumObjects"),
         actionButton("applySummary", "Analyze", icon = icon("paper-plane-o")),
         
-        p(""),
-        verbatimTextOutput("SummaryReport")
+        br(),
+        br(),
+        verbatimTextOutput("SummaryReport"),
+        
+        br(),
+        br(),
+        dataTableOutput("TreatmentSummaryTable")
     ),
 
 

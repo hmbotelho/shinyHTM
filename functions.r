@@ -9,7 +9,7 @@
     
 
 # Generate Plotly scatter/jitter plot
-pointPlot <- function(df, batch_col, batch, x, y){
+pointPlot <- function(df, batch_col, batch, x, y, splitBy = "None"){
         
     # Subset batches
     if(batch != "All batches"){
@@ -28,12 +28,19 @@ pointPlot <- function(df, batch_col, batch, x, y){
         g + geom_jitter()
     }
 
+    # Customize plot
+    if(splitBy != "None"){
+        g <- g + 
+            facet_grid(as.formula(paste("~", splitBy)), scales = "free_x") + 
+            theme(strip.text.x = element_text(angle = 90))
+    }
 
+    # Output finished plot
     ggplotly(g)
 }
 
 # Generate Plotly boxplot
-boxPlot <- function(df, batch_col, batch, x, y){
+boxPlot <- function(df, batch_col, batch, x, y, highlightCenter = "No", splitBy = "None"){
     
     # Subset batches
     if(batch != "All batches"){
@@ -44,6 +51,21 @@ boxPlot <- function(df, batch_col, batch, x, y){
     g <- ggplot(df, aes_string(x, y))
     g <- g + geom_boxplot() +
         ggtitle(batch)
+    
+    # Customize plot
+    if(highlightCenter != "No"){
+        g <- switch(highlightCenter,
+                    "Mean"   = g + stat_summary(fun.y = "mean",   colour = "red", size = 4, geom = "point", alpha = 0.5),
+                    "Median" = g + stat_summary(fun.y = "median", colour = "red", size = 4, geom = "point", alpha = 0.5)
+        )
+    }
+    if(splitBy != "None"){
+        g <- g + 
+        facet_grid(as.formula(paste("~", splitBy)), scales = "free_x") + 
+        theme(strip.text.x = element_text(angle = 90))
+    }
+        
+    # Output finished plot
     ggplotly(g)
 }
 

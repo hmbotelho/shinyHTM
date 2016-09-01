@@ -32,7 +32,7 @@ The app runs in   a browser window like so:
 * Show all data points or only individual plates
 * Contains a sample dataset
 * Data normalization
-* __Soon to come:__ treatment summary
+* Treatment summary
 
 
 ## Requirements
