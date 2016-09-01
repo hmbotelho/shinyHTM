@@ -5,6 +5,8 @@
 #
 # ==========================================================================
 
+# To do:
+# Sync negative control across Normalize&Summarize
 
 source("dependencies.r")
 source("functions.r")
@@ -13,7 +15,9 @@ source("functions.r")
 options(shiny.maxRequestSize=2*1024^3)
 
 # Initialize variables
-rm(htm, htmHM, QCsettings)
+if(exists("htm")) rm(htm)
+if(exists("htmHM")) rm(htmHM)
+if(exists("QCsettings")) rm(QCsettings)
 
 QCsettings <<- data.frame(type       = character(), 
                          measurement = character(), 
@@ -267,45 +271,63 @@ shinyServer(function(input, output){
     })
     observeEvent(input$applyQC,{
         
-        if(nrow(QCsettings) != 0){
+        if(nrow(QCsettings) == 0){
+            # If no QC setting is selected, approve all images
+            htm[[col_QC]] <- TRUE
+            htm <<- htm
+            
+            # This function echoes all QC messages
+            generateQCreport <- function(){
+                print("Performing QCs:")
+                print("  No QCs selected. Setting all data to valid.")
+                print(paste0("  Total measurements: ", nrow(htm)))
+                print("")
+                print(paste0("The column ", col_QC, " has been updated."))
+            }
+            
+        } else{
+            
+            # If QC parameters have been selected, label the htm data.frame accordingly
             temp <- applyQC(htm, QCsettings)
-            htm$HTM_QC <- temp
-            htm <<- htm   
+            htm[[col_QC]] <- temp
+            htm <<- htm
+            
+            # This function echoes all QC messages
+            generateQCreport <- function(){
+                print("Performing QCs:")
+                print("QC:")
+                for(i in 1:nrow(QCsettings)){
+                    switch(as.character(QCsettings[i, "type"]),
+                           "Failed experiment" = {
+                               print("Failed experiment:")
+                               print(paste0("  Batch: ", QCsettings[i, "minimum"]))
+                           },
+                           "Numeric QC" = {
+                               print(paste0("Measurement: ", QCsettings[i, "measurement"]))
+                               print(paste0("  Allowed range: ", QCsettings[i, "minimum"], " ... ", QCsettings[i, "maximum"], " and not NA."))
+                           },
+                           "Text QC" = {
+                               print(paste0("Measurement: ", QCsettings[i, "measurement"]))
+                               print(paste0("  Reject text: ", QCsettings[i, "minimum"]))
+                           }
+                    )
+                    
+                    
+                    print(paste0("  Total: ", nrow(htm)))
+                    print(paste0("  Failed: ", QCsettings[i, "failed"]))
+                    print("")
+                }
+                print("Summary of all QCs:")
+                print(paste0("  Total (all QCs): ", nrow(htm)))
+                print(paste0("     Approved (all Qcs): ", sum(htm[[col_QC]])))
+                print(paste0("     Failed (all Qcs): ", sum(!htm[[col_QC]])))
+                print("")
+                print(paste0("The column ", col_QC, " has been updated."))
+            }
         }
         
-        # Output QC summary to the R console
-        generateQCreport <- function(){
-            print("Performing QCs:")
-            print("QC:")
-            for(i in 1:nrow(QCsettings)){
-                switch(as.character(QCsettings[i, "type"]),
-                       "Failed experiment" = {
-                           print("Failed experiment:")
-                           print(paste0("  Batch: ", QCsettings[i, "minimum"]))
-                       },
-                       "Numeric QC" = {
-                           print(paste0("Measurement: ", QCsettings[i, "measurement"]))
-                           print(paste0("  Allowed range: ", QCsettings[i, "minimum"], " ... ", QCsettings[i, "maximum"], " and not NA."))
-                       },
-                       "Text QC" = {
-                           print(paste0("Measurement: ", QCsettings[i, "measurement"]))
-                           print(paste0("  Reject text: ", QCsettings[i, "minimum"]))
-                       }
-                )
-                
-                
-                print(paste0("  Total: ", nrow(htm)))
-                print(paste0("  Failed: ", QCsettings[i, "failed"]))
-                print("")
-            }
-            print("Summary of all QCs:")
-            print(paste0("  Total (all QCs): ", nrow(htm)))
-            print(paste0("  Failed (all Qcs): ", sum(htm$HTM_QC)))
-            print("")
-            print(paste0("The column ", col_QC, " has been updated."))
-        }
+        # Echo QC messages to the R console and html page
         generateQCreport()
-        # Output QC summary to the html page
         output$QCreport <- renderPrint(generateQCreport())
         
     })
@@ -372,7 +394,7 @@ shinyServer(function(input, output){
     output$UINormNegCtrl       <- renderUI({
         input$file1
         
-        selectInput("NormNegCtrl", "Negative control", choices = as.list(sort(htm[[input$colTreatment]])))
+        selectInput("NormNegCtrl", "Negative control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))))
     })
     
     observeEvent(input$applyNorm,{
@@ -401,20 +423,58 @@ shinyServer(function(input, output){
     output$UISummaryNegCtrl      <- renderUI({
         input$file1
         input$applyNorm
+        input$NormNegCtrl
         
-        selectInput("SummaryNegCtrl", "Negative control", choices = as.list(sort(htm[[input$colTreatment]])))
+        selectInput("SummaryNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))))
     })
     output$UISummaryPosCtrl      <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("SummaryPosCtrl", "Positive control", choices = as.list(sort(htm[[input$colTreatment]])))
+        selectInput("SummaryPosCtrl", "Positive control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))))
     })
     output$UISummaryNumObjects   <- renderUI({
         input$file1
         input$applyNorm
         
         selectInput("SummaryNumObjects", "Number of objects per image", choices = as.list(names(htm)))
+    })
+    
+    observeEvent(input$SummaryMeasurements,{
+        output$SummaryReport <- renderPrint("")
+    })
+    observeEvent(input$SummaryNegCtrl,{
+        output$SummaryReport <- renderPrint("")
+    })
+    observeEvent(input$SummaryPosCtrl,{
+        output$SummaryReport <- renderPrint("")
+    })
+    observeEvent(input$SummaryNumObjects,{
+        output$SummaryReport <- renderPrint("")
+    })
+    observeEvent(input$applySummary,{
+        temp <- htmTreatmentSummary(data                 = htm,
+                                    measurements         = input$SummaryMeasurements,
+                                    col_Experiment       = input$colBatch,
+                                    col_Treatment        = input$colTreatment,
+                                    col_ObjectCount      = input$SummaryNumObjects,
+                                    col_QC               = col_QC,
+                                    negative_ctrl        = input$SummaryNegCtrl,
+                                    positive_ctrl        = input$SummaryPosCtrl,
+                                    excluded_Experiments = "")
+        
+        # Save summary table
+        path <- tclvalue(tkgetSaveFile(initialfile = paste0("TreatmentSummary--", input$SummaryMeasurements, ".csv")))
+        write.csv(temp, path, row.names = FALSE)
+        
+        generateSummaryReport <- function(){
+            print(paste0("Saved summary table to ", path))
+        }
+        
+        # Echo Summary messages to the R console and html page
+        generateSummaryReport()
+        output$SummaryReport <- renderPrint(generateSummaryReport())
+        
     })
     
     

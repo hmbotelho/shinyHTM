@@ -103,10 +103,10 @@ shinyUI(navbarPage("shinyHTM",
         uiOutput("UINormGradientCorr"),
         uiOutput("UINormMethod"),
         uiOutput("UINormNegCtrl"),
-        checkboxInput("NormCombinedVecror", "Compute combined vector for all selected measurements?"),
-        selectInput("NormMultiply", "Multiply with cos(tetha)^N along average treatment effect; N=", choices = list(0,1,2,4,8,16,32)),
+        checkboxInput("NormCombinedVecror", "[DISABLED] Compute combined vector for all selected measurements?"),
+        selectInput("NormMultiply", "[DISABLED] Multiply with cos(tetha)^N along average treatment effect; N=", choices = list(0,1,2,4,8,16,32)),
         hr(),
-        actionButton("applyNorm", "Normalize [Not working]", icon = icon("paper-plane-o"))
+        actionButton("applyNorm", "Normalize", icon = icon("paper-plane-o"))
     ),
 
 
@@ -117,7 +117,10 @@ shinyUI(navbarPage("shinyHTM",
         uiOutput("UISummaryNegCtrl"),
         uiOutput("UISummaryPosCtrl"),
         uiOutput("UISummaryNumObjects"),
-        actionButton("applySummary", "Analyze [Not working]", icon = icon("paper-plane-o"))
+        actionButton("applySummary", "Analyze", icon = icon("paper-plane-o")),
+        
+        p(""),
+        verbatimTextOutput("SummaryReport")
     ),
 
 

@@ -2,6 +2,7 @@
 #
 # - Color by batch, treatment, replicate, ....
 # - Plotly lasso to select images
+# - Summarize multiple measurements simultaneously
 
 
 
@@ -187,7 +188,11 @@ applyQC <- function(df, dfQC){
             testvalue <- x[dfQC[i, "measurement"]]
             
             temp <- switch (as.character(dfQC[i,"type"]),
-                "Numeric QC"        = as.numeric(testvalue) >= as.numeric(dfQC[i, "minimum"]) & as.numeric(testvalue) <= as.numeric(dfQC[i, "maximum"]),
+                "Numeric QC"        = if(is.na(testvalue)){
+                                            FALSE
+                                      } else{
+                                            as.numeric(testvalue) >= as.numeric(dfQC[i, "minimum"]) & as.numeric(testvalue) <= as.numeric(dfQC[i, "maximum"])
+                                      },
                 "Text QC"           = testvalue != dfQC[i, "minimum"],
                 "Failed experiment" = testvalue != dfQC[i, "minimum"]
             )
@@ -439,7 +444,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
                 indices_all <- which((data[[col_Experiment]] == experiment))
                 indices_ok  <- which((data[[col_Experiment]] == experiment) & (data[[col_QC]]) & !is.na(data[[input]]))
                 
-                if("all treatments" %in% negcontrol) {
+                if("All treatments" %in% negcontrol) {
                     indices_controls_ok <- indices_ok
                 } else {
                     indices_controls_ok <- which((data[[col_Experiment]] == experiment) 
@@ -635,8 +640,8 @@ htmMatrixToXYV <- function(xx, yy, m, mi) {
 #
 # Treatment Summary
 #
-# Still needs to be 'converted' to shinyHTM
-htmTreatmentSummary_Data <- function(data, measurements, col_Experiment, negcontrols, col_Treatment, colObjectCount, negative_ctrl, positive_ctrl, col_QC) {
+
+htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatment, col_ObjectCount, col_QC, negative_ctrl, positive_ctrl, excluded_Experiments) {
     
     print("")
     print("Treatment Summary:")
@@ -653,19 +658,19 @@ htmTreatmentSummary_Data <- function(data, measurements, col_Experiment, negcont
     #colObjectCount <- colObjectCount
     
     # output
-    print("");print("Experiments:")
-    print(experiments)
-    print("");print(paste("Number of treatments:",length(treatments)))
-    print("");print(paste("Negative control:",negative_ctrl))
-    print("");print(paste("Positive control:",positive_ctrl))
-    print("");print(paste("Measurement:",measurement))
+    print(""); print("Experiments:")
+               print(experiments)
+    print(""); print(paste("Number of treatments:",length(treatments)))
+    print(""); print(paste("Negative control:",negative_ctrl))
+    print(""); print(paste("Positive control:",positive_ctrl))
+    print(""); print(paste("Measurement:",measurement))
     print(""); print("")
     
     if(!(measurement %in% names(data))) {
         print(paste("ERROR: measurement",measurement,"does not exist in data"))
         return(0)
     }
-    if(!(colObjectCount %in% names(data))) {
+    if(!(col_ObjectCount %in% names(data))) {
         print(paste("ERROR: object count",measurement,"does not exist in data"))
         return(0)
     }
@@ -745,12 +750,12 @@ htmTreatmentSummary_Data <- function(data, measurements, col_Experiment, negcont
                         # & !(data[[htm@settings@columns$experiment]] %in% htmGetVectorSettings("statistics$experiments_to_exclude")) 
                         & (data[[col_QC]]==1)
                         & !(is.na(data[[measurement]])), 
-                        select = c(col_Treatment,measurement,col_Experiment,colObjectCount))
+                        select = c(col_Treatment,measurement,col_Experiment,col_ObjectCount))
             
-            names(d)[names(d)==measurement]    <- "value"
-            names(d)[names(d)==col_Treatment]  <- "treatment"
-            names(d)[names(d)==col_Experiment] <- "experiment"
-            names(d)[names(d)==colObjectCount] <- "count"
+            names(d)[names(d)==measurement]     <- "value"
+            names(d)[names(d)==col_Treatment]   <- "treatment"
+            names(d)[names(d)==col_Experiment]  <- "experiment"
+            names(d)[names(d)==col_ObjectCount] <- "count"
             
             d$treatment = ifelse(d$treatment %in% negative_ctrl, "control", d$treatment)
             
@@ -943,11 +948,11 @@ htmTreatmentSummary_Data <- function(data, measurements, col_Experiment, negcont
             #                               ))
             quality = ""
             
-            if ( exp %in% htmGetVectorSettings("statistics$experiments_to_exclude") ) {
-                comment = "(Excluded)  " 
-            } else {
+            #if ( exp %in% excluded_Experiments ) {
+            #    comment = "(Excluded)  " 
+            #} else {
                 comment = ""
-            }
+            #}
             
             print(paste0(comment,exp,"; N_neg: ",n_neg,"; N_pos: ",n_pos,"; mean z-score of positive controls: ",round(z_score,3)," ",quality)) #,"  t-value: ",t_value))
             

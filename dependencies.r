@@ -14,3 +14,9 @@ if (!require("ggplot2")) {
     install.packages("ggplot2")
     library(ggplot2)
 }
+
+
+if (!require("tcltk")) {
+    install.packages("tcltk")
+    library(tcltk)
+}
