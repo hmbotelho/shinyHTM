@@ -9,8 +9,12 @@
     
 
 # Generate Plotly scatter/jitter plot
-pointPlot <- function(df, batch_col, batch, x, y, splitBy = "None"){
-        
+pointPlot <- function(df, batch_col, batch, x, y, col_QC, splitBy = "None"){
+    
+    # Initialize variables
+    plotSymbols <- c(approved = 20, rejected = 4)
+    
+    
     # Subset batches
     if(batch != "All batches"){
         df <- df[df[[batch_col]] == batch,]
@@ -21,11 +25,15 @@ pointPlot <- function(df, batch_col, batch, x, y, splitBy = "None"){
     g <- ggplot(df, aes_string(x, y)) + ggtitle(batch)
 
     
+    # Calculate the symbol to be used at each data point
+    symbols <- sapply(df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
+
+    
     # Define the plot type (scatter vs jitter) depending on the data types
     g <- if(class(df[[x]]) == "numeric" & class(df[[y]]) == "numeric"){
-        g + geom_point()
+        g + geom_point(shape = symbols)
     } else{
-        g + geom_jitter()
+        g + geom_jitter(shape = symbols)
     }
 
     # Customize plot
@@ -40,12 +48,17 @@ pointPlot <- function(df, batch_col, batch, x, y, splitBy = "None"){
 }
 
 # Generate Plotly boxplot
-boxPlot <- function(df, batch_col, batch, x, y, highlightCenter = "No", splitBy = "None"){
+boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightCenter = "No", splitBy = "None"){
     
     # Subset batches
     if(batch != "All batches"){
         df <- df[df[[batch_col]] == batch,]
     }
+    
+    
+    # QC rejected data points will not show up in the boxplot
+    df <- df[df[[col_QC]],]
+    
     
     # Make plot
     g <- ggplot(df, aes_string(x, y))
@@ -70,15 +83,31 @@ boxPlot <- function(df, batch_col, batch, x, y, highlightCenter = "No", splitBy 
 }
 
 # Generate Plotly heatmap
-heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1){
+heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC){
+    
+    # Initialize variables
+    plotSymbols <- c(approved = 15, rejected = 4)
+    
+    
+    # Define the data to be plotted
     g <- ggplot(df, aes_string("heatX", "heatY", color = measurement))
-    g <- g + geom_point(size=symbolsize, shape=df$hmsymbols) + 
+    
+    
+    # Calculate the symbol to be used at each data point
+    symbols <- sapply(df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
+    
+    
+    # Other plot settings
+    g <- g + geom_point(size=symbolsize, shape=symbols) + 
         scale_color_gradient2(midpoint=mean(df[[measurement]]), low="blue", mid="white", high="red") +
         ggtitle(batch) + 
         theme(panel.grid = element_blank()) +
         scale_x_continuous(breaks=1:ncolumns) + 
         scale_y_continuous(breaks = 1:nrows, labels = LETTERS[nrows:1]) + 
         theme(axis.title.x=element_blank(), axis.title.y=element_blank())
+    
+    
+    # Output finished plot
     ggplotly(g)
 }
 
@@ -166,13 +195,6 @@ makeHeatmapDataFrame <- function(df, WellX, WellY, PosX, PosY, subposjitter = 0.
 
     # Calculate coordinates for heatmap
     dfCoords <- generateHeatmapCoordinates(WellX, WellY, PosX, PosY, subposjitter)
-    
-    # Initialize variables
-    hmsymbols <- c(ok=15, rejected=4)   # Symbols for heatmaps [squares and crosses]
-    plsymbols <- c(ok=16, rejected=4)   # Symbols for heatmaps [circles and crosses]
-    
-    # Add heatmap symbols
-    df$hmsymbols <- sapply(df[[col_QC]], function(x) ifelse(x, hmsymbols["ok"],hmsymbols["rejected"]))
 
     # Add heatmap coordinates
     for(i in 1:nrow(df)){

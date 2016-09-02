@@ -7,6 +7,7 @@
 
 # To do:
 # Sync negative control across Normalize&Summarize
+# Update plot symbols each time QC is applied
 
 source("dependencies.r")
 source("functions.r")
@@ -142,22 +143,29 @@ shinyServer(function(input, output){
     # Plot
     output$plot <- renderPlotly({
         switch(input$plotType,
-               "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, input$PointplotsplitBy),
-               "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, input$BoxplothighlightCenter, input$BoxplotsplitBy),
-               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize)
+               "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$PointplotsplitBy),
+               "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$BoxplothighlightCenter, input$BoxplotsplitBy),
+               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC)
         )
     })
 
     
     
     # QC-specific settings
+    approvedExperiments          <- reactive({
+        input$QCAddfailedExperiments
+        input$QCcheckGroup
+        
+        unique(as.character(htm[[input$colBatch]]))[!(unique(as.character(htm[[input$colBatch]])) %in% as.character(QCsettings[QCsettings$type == "Failed experiment","minimum"]))]
+    })
+    
     output$UIQCfailedExperiments <- renderUI({
         input$file1
         input$applyNorm
         
         fluidRow(
             column(6,
-                selectInput("QCfailedExperiment", "Failed experiments:", htm[[input$colBatch]], width = "200%")
+                selectInput("QCfailedExperiment", "Failed experiments:", approvedExperiments(), width = "200%")
             ),
             column(2,
                 NULL
