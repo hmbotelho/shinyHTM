@@ -92,31 +92,37 @@ shinyServer(function(input, output){
         # Display plot control widgets depending on which plot type is selected
         switch(input$plotType,
             "Scatter plot" = {
-                output$UIselectXaxis = renderUI(selectInput("Xaxis", "X axis:", choices = as.list(names(htm)), width = "200%"))
-                output$UIselectYaxis = renderUI(selectInput("Yaxis", "Y axis:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "X axis:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Y axis:", choices = as.list(names(htm)), width = "200%"))
                 
-                output$UIPointplotsplitBy = renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
+                output$UIhighlightQCfailed <- renderUI(checkboxInput("highlightQCfailed", "Show data points that did not pass QC", value = FALSE))
                 
-                output$UIBoxplothighlightCenter = renderUI(NULL)
-                output$UIBoxplotsplitBy = renderUI(NULL)
+                output$UIPointplotsplitBy <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
+                
+                output$UIBoxplothighlightCenter <- renderUI(NULL)
+                output$UIBoxplotsplitBy <- renderUI(NULL)
             },
             "Boxplot"      = {
-                output$UIselectXaxis = renderUI(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%"))
-                output$UIselectYaxis = renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
                 
-                output$UIPointplotsplitBy = renderUI(NULL)
+                output$UIhighlightQCfailed <- renderUI(checkboxInput("highlightQCfailed", "Hide data points that did not pass QC", value = FALSE))
                 
-                output$UIBoxplothighlightCenter = renderUI(selectInput("BoxplothighlightCenter", "Highlight box center?", choices = list("No", "Mean", "Median")))
-                output$UIBoxplotsplitBy = renderUI(selectInput("BoxplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
+                output$UIPointplotsplitBy <- renderUI(NULL)
+                
+                output$UIBoxplothighlightCenter <- renderUI(selectInput("BoxplothighlightCenter", "Highlight box center?", choices = list("No", "Mean", "Median")))
+                output$UIBoxplotsplitBy <- renderUI(selectInput("BoxplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
             },
             "Heatmap"      = {
-                output$UIselectXaxis = renderUI(NULL)
-                output$UIselectYaxis = renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectXaxis <- renderUI(NULL)
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
                 
-                output$UIPointplotsplitBy = renderUI(NULL)
+                output$UIhighlightQCfailed <- renderUI(checkboxInput("highlightQCfailed", "Show data points that did not pass QC", value = FALSE))
                 
-                output$UIBoxplothighlightCenter = renderUI(NULL)
-                output$UIBoxplotsplitBy = renderUI(NULL)
+                output$UIPointplotsplitBy <- renderUI(NULL)
+                
+                output$UIBoxplothighlightCenter <- renderUI(NULL)
+                output$UIBoxplotsplitBy <- renderUI(NULL)
             }
         )
     })
@@ -143,9 +149,9 @@ shinyServer(function(input, output){
     # Plot
     output$plot <- renderPlotly({
         switch(input$plotType,
-               "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$PointplotsplitBy),
-               "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$BoxplothighlightCenter, input$BoxplotsplitBy),
-               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC)
+               "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy),
+               "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy),
+               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed)
         )
     })
 

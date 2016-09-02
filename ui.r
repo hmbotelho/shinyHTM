@@ -60,15 +60,19 @@ shinyUI(navbarPage("shinyHTM",
             column(7,
                 uiOutput("UIselectXaxis"),
                 uiOutput("UIselectYaxis"),
+                br(),br(),
+                
+                uiOutput("UIhighlightQCfailed"),
                 
                 # Scatter plot customization options
-                br(),br(),
                 uiOutput("UIPointplotsplitBy"),
                 
                 # Boxplot customziation options
-                br(),br(),
                 uiOutput("UIBoxplothighlightCenter"),
                 uiOutput("UIBoxplotsplitBy")
+                
+                # Heatmap customziation options
+                
             ),
             
             column(3,

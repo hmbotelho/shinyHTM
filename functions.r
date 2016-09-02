@@ -9,8 +9,8 @@
     
 
 # Generate Plotly scatter/jitter plot
-pointPlot <- function(df, batch_col, batch, x, y, col_QC, splitBy = "None"){
-    
+pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, splitBy = "None"){
+
     # Initialize variables
     plotSymbols <- c(approved = 20, rejected = 4)
     
@@ -26,7 +26,11 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, splitBy = "None"){
 
     
     # Calculate the symbol to be used at each data point
-    symbols <- sapply(df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
+    symbols <- if(highlightQCfailed){
+        sapply(df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
+    } else{
+        plotSymbols["approved"]
+    }
 
     
     # Define the plot type (scatter vs jitter) depending on the data types
@@ -48,18 +52,20 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, splitBy = "None"){
 }
 
 # Generate Plotly boxplot
-boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightCenter = "No", splitBy = "None"){
-    
+boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highlightCenter = "No", splitBy = "None"){
+
     # Subset batches
     if(batch != "All batches"){
         df <- df[df[[batch_col]] == batch,]
     }
     
     
-    # QC rejected data points will not show up in the boxplot
-    df <- df[df[[col_QC]],]
-    
-    
+    # Hide rejected data points if requested
+    if(highlightQCfailed){
+        df <- df[df[[col_QC]],]
+    }
+
+
     # Make plot
     g <- ggplot(df, aes_string(x, y))
     g <- g + geom_boxplot() +
@@ -83,7 +89,7 @@ boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightCenter = "No", 
 }
 
 # Generate Plotly heatmap
-heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC){
+heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed){
     
     # Initialize variables
     plotSymbols <- c(approved = 15, rejected = 4)
@@ -94,7 +100,11 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
     
     
     # Calculate the symbol to be used at each data point
-    symbols <- sapply(df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
+    symbols <- if(highlightQCfailed){
+        sapply(df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
+    } else{
+        plotSymbols["approved"]
+    }
     
     
     # Other plot settings
