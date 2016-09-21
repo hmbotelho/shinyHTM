@@ -51,7 +51,7 @@ Each line in the file corresponds to 1 imaging field and contains all the "measu
 | 1  | `Count_cell_all`                                               | Number of all cells in the image. |
 | 2  | `Count_cell_final`                                             | A subset of Count_cell_all which excludes cells with saturated fluorescence, aberrant phenotypes and cells touching the image edge. |
 | 3  | `ImageNumber`                                                  | Sequential number of the imaging field. |
-| 4  | `ImageQuality_PowerLogLogSlope_nucleus`                        | A metric for blur detection. (http://d1zymp9ayga15t.cloudfront.net/CPmanual/MeasureImageQuality.html) |
+| 4  | `ImageQuality_PowerLogLogSlope_nucleus`                        | A metric for blur detection. [more info](http://d1zymp9ayga15t.cloudfront.net/CPmanual/MeasureImageQuality.html) |
 | 5  | `Intensity_MedianIntensity_PM_bgCorr_bgMask`                   | Median fluorescence intensity in cell-free regions (PM channel). Reports on background flurorescence. |
 | 6  | `Intensity_MedianIntensity_TOTAL_bgCorr_bgMask`                | Median fluorescence intensity in cell-free regions (Total channel). Reports on background flurorescence. |
 | 7  | `Mean_cell_final_Intensity_IntegratedIntensity_PM_bgCorr`      | The mean of the integrated fluorescence intensity in the "PM" channel, calculated across all cells in an image. |

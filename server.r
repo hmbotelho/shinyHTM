@@ -34,7 +34,16 @@ shinyServer(function(input, output){
 
     # File Input
     observeEvent(input$file1, {
-        htm <- read.csv(input$file1$datapath, stringsAsFactors = FALSE)
+        
+        # Detect file type and load it accordingly
+        if(grepl("\t", readLines(input$file1$datapath, n = 1))){
+            # File is tab-separated (there is at least 1 tab in the first line)
+            htm <- read.csv(input$file1$datapath, sep = "\t", stringsAsFactors = FALSE)
+        } else{
+            # File is comma-separated
+            htm <- read.csv(input$file1$datapath, stringsAsFactors = FALSE)
+        }
+        
         htm[[col_QC]] <- TRUE
         htm <<- htm
     })
