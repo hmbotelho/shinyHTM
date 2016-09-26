@@ -20,3 +20,9 @@ if (!require("tcltk")) {
     install.packages("tcltk")
     library(tcltk)
 }
+
+
+if (!require("xlsx")) {
+    install.packages("xlsx")
+    library(xlsx)
+}

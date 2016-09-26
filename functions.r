@@ -6,7 +6,44 @@
 
 
 
+
+# Reads a data.frame from csv, tsv, xls and xlsx files. The file format is auto-detected.
+read.HTMtable <- function(filepath){
+    # filepath : full path to file. includes the filename. In Windows this is a temporary folder where the file is named '0'
+    # filename : original filename
+    # Requires package xlsx
     
+    tryCatch(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE), 
+             error = function(e){
+                 
+                 # File not Excel
+                 if(grepl("\t", readLines(filepath, n = 1))){
+                     
+                     # Tab-separated file
+                     return(read.csv(filepath, sep = "\t", stringsAsFactors = FALSE))
+                 }
+                 
+                 if(grepl(",", readLines(filepath, n = 1))){
+                     
+                     # Comma-separated file
+                     return(read.csv(filepath, sep = ",", stringsAsFactors = FALSE))
+                 }
+                 
+                 # Unknown file type
+                 warning("Unknown file format. Loading an empty data table.")
+                 return(data.frame())
+                 
+             },
+             finally = function(e){
+                 
+                 # Excel file
+                 return(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE))
+             }
+    )
+}
+
+
+
 
 # Generate Plotly scatter/jitter plot
 pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, splitBy = "None"){
