@@ -380,7 +380,7 @@ shinyServer(function(input, output){
         } else {
             print("You selected:")
             print(s)
-            i = s[["pointNumber"]]
+            i = s[["pointNumber"]] + 1
             
             openTheseImgChannels <- input$images2display
             
