@@ -42,11 +42,15 @@ The app runs in   a browser window like so:
 
 
 ## How to run
-* Download the repository  
-* Unzip  
-* Open R or RStudio 
-* Write the following commands. Adapt to your case.
-``
-setwd("folder_with_unzipped_files");  
-source("run.r")
-``
+* Make sure your computer is online  
+* If you have never used shiny before, install it using:  
+```r
+install.packages("shiny")
+```
+* Type the following commands:  
+```r
+library(shiny)
+runGitHub("shinyHTM", "hmbotelho")
+```
+* This will run the latest version of shinyHTM  
+* Sample datasets are provided [here](https://github.com/hmbotelho/sample_data).  
