@@ -8,11 +8,11 @@
 #
 # Startup
 #
-loadpackage <- function(package){
-    if(!(package %in% installed.packages())){
-        install.packages(package)
+loadpackage <- function(pckg){
+    if(!(pckg %in% installed.packages())){
+        install.packages(pckg)
     }
-    library(package, character.only=TRUE)
+    library(pckg, character.only=TRUE)
 }
 
 

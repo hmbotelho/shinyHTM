@@ -45,11 +45,12 @@ The app runs in   a browser window like so:
 * Make sure your computer is online  
 * If you have never used shiny before, install it using:  
 ```r
-install.packages("shiny")
+install.packages(c("shiny", "plotly"))
 ```
 * Type the following commands:  
 ```r
 library(shiny)
+library(plotly)
 runGitHub("shinyHTM", "hmbotelho")
 ```
 * This will run the latest version of shinyHTM  
