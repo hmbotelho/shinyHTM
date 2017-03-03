@@ -9,7 +9,7 @@
 # Startup
 #
 loadpackage <- function(package){
-    if(package %in% installed.packages()){
+    if(!(package %in% installed.packages())){
         install.packages(package)
     }
     library(package, character.only=TRUE)
