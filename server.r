@@ -9,8 +9,15 @@
 # Sync negative control across Normalize&Summarize
 # Update plot symbols each time QC is applied
 
-source("dependencies.r")
-source("functions.r")
+source("./functions.r")
+loadpackage("shiny")
+loadpackage("plotly")
+loadpackage("ggplot2")
+loadpackage("tcltk")
+loadpackage("xlsx")
+
+
+
 
 # Adjust maximum upload size to 2 Gb
 options(shiny.maxRequestSize=2*1024^3)
@@ -31,6 +38,7 @@ col_QC <- "HTM_QC"
 
 shinyServer(function(input, output){
 
+    
 
     # File Input
     observeEvent(input$file1, {

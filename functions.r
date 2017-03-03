@@ -5,6 +5,17 @@
 # - Summarize multiple measurements simultaneously
 
 
+#
+# Startup
+#
+loadpackage <- function(package){
+    if(package %in% installed.packages()){
+        install.packages(package)
+    }
+    library(package, character.only=TRUE)
+}
+
+
 
 
 # Reads a data.frame from csv, tsv, xls and xlsx files. The file format is auto-detected.
