@@ -66,6 +66,11 @@ shinyUI(navbarPage("shinyHTM",
                 
                 # Scatter plot customization options
                 uiOutput("UIPointplotsplitBy"),
+                br(),
+                fluidRow(
+                    column(6, uiOutput("UIPointplotfilterColumn")),
+                    column(6, uiOutput("UIPointplotfilterValues"))
+                ),
                 
                 # Boxplot customziation options
                 uiOutput("UIBoxplothighlightCenter"),

@@ -65,7 +65,7 @@ read.HTMtable <- function(filepath){
 
 
 # Generate Plotly scatter/jitter plot
-pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, splitBy = "None"){
+pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", filterByColumn = "None", whichValues = "All"){
 
     # Initialize variables
     plotSymbols <- c(approved = 20, rejected = 4)
@@ -75,6 +75,17 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, spl
     if(batch != "All batches"){
         df <- df[df[[batch_col]] == batch,]
     }
+
+
+    # Subset by columns
+    if(filterByColumn != "None"){
+        if(!("All" %in% whichValues) & !is.null(whichValues)){
+            OKrows <- sapply(df[[filterByColumn]], function(x){
+                x %in% whichValues
+            })
+            df <- df[OKrows,]
+        }
+    }    
 
 
     # Define the data to be plotted
