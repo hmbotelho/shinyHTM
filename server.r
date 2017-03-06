@@ -15,6 +15,7 @@ loadpackage("plotly")
 loadpackage("ggplot2")
 loadpackage("tcltk")
 loadpackage("xlsx")
+loadpackage("shinyjs")
 
 
 
@@ -317,65 +318,63 @@ shinyServer(function(input, output){
     })
     observeEvent(input$applyQC,{
         
-        if(nrow(QCsettings) == 0){
-            # If no QC setting is selected, approve all images
-            htm[[col_QC]] <- TRUE
-            htm <<- htm
+        withCallingHandlers({
+            html("echo_QC", "", add = FALSE)
             
-            # This function echoes all QC messages
-            generateQCreport <- function(){
-                print("Performing QCs:")
-                print("  No QCs selected. Setting all data to valid.")
-                print(paste0("  Total measurements: ", nrow(htm)))
-                print("")
-                print(paste0("The column ", col_QC, " has been updated."))
-            }
+            echo("Performing QCs:")
+            echo("")
             
-        } else{
-            
-            # If QC parameters have been selected, label the htm data.frame accordingly
-            temp <- applyQC(htm, QCsettings)
-            htm[[col_QC]] <- temp
-            htm <<- htm
-            
-            # This function echoes all QC messages
-            generateQCreport <- function(){
-                print("Performing QCs:")
-                print("QC:")
+            if(nrow(QCsettings) == 0){
+                
+                # If no QC setting is selected, approve all images
+                htm[[col_QC]] <- TRUE
+                htm <<- htm
+                
+                echo("  No QCs selected. Setting all data to valid.")
+                echo("  Total measurements: ", nrow(htm))
+                echo("")
+                echo("The column ", col_QC, " has been updated.")
+                
+            } else{
+                
+                # If QC parameters have been selected, label the htm data.frame accordingly
+                temp <- applyQC(htm, QCsettings)
+                htm[[col_QC]] <- temp
+                htm <<- htm
+                
+                echo("QCs:")
                 for(i in 1:nrow(QCsettings)){
                     switch(as.character(QCsettings[i, "type"]),
-                           "Failed experiment" = {
-                               print("Failed experiment:")
-                               print(paste0("  Batch: ", QCsettings[i, "minimum"]))
-                           },
-                           "Numeric QC" = {
-                               print(paste0("Measurement: ", QCsettings[i, "measurement"]))
-                               print(paste0("  Allowed range: ", QCsettings[i, "minimum"], " ... ", QCsettings[i, "maximum"], " and not NA."))
-                           },
-                           "Text QC" = {
-                               print(paste0("Measurement: ", QCsettings[i, "measurement"]))
-                               print(paste0("  Reject text: ", QCsettings[i, "minimum"]))
-                           }
+                        "Failed experiment" = {
+                            echo("Failed experiment:")
+                            echo("  Batch: ", QCsettings[i, "minimum"])
+                        },
+                        "Numeric QC" = {
+                            echo("Measurement: ", QCsettings[i, "measurement"])
+                            echo("  Allowed range: ", QCsettings[i, "minimum"], " ... ", QCsettings[i, "maximum"], " and not NA.")
+                        },
+                        "Text QC" = {
+                            echo("Measurement: ", QCsettings[i, "measurement"])
+                            echo("  Reject text: ", QCsettings[i, "minimum"])
+                        }
                     )
                     
-                    
-                    print(paste0("  Total: ", nrow(htm)))
-                    print(paste0("  Failed: ", QCsettings[i, "failed"]))
-                    print("")
+                    echo("  Total: ", nrow(htm))
+                    echo("  Failed: ", QCsettings[i, "failed"])
+                    echo("")
                 }
-                print("Summary of all QCs:")
-                print(paste0("  Total (all QCs): ", nrow(htm)))
-                print(paste0("     Approved (all Qcs): ", sum(htm[[col_QC]])))
-                print(paste0("     Failed (all Qcs): ", sum(!htm[[col_QC]])))
-                print("")
-                print(paste0("The column ", col_QC, " has been updated."))
+                
+                echo("Summary of all QCs:")
+                echo("  Total (all QCs): ", nrow(htm))
+                echo("     Approved (all Qcs): ", sum(htm[[col_QC]]))
+                echo("     Failed (all Qcs): ", sum(!htm[[col_QC]]))
+                echo("")
+                echo("The column ", col_QC, " has been updated.")
             }
-        }
-        
-        # Echo QC messages to the R console and html page
-        generateQCreport()
-        output$QCreport <- renderPrint(generateQCreport())
-        
+            
+        },
+            message = function(m) html("echo_QC", m$message, add = TRUE)
+        )
     })
     
 
@@ -436,18 +435,26 @@ shinyServer(function(input, output){
     })
     
     observeEvent(input$applyNorm,{
-        htm <<- htmNormalization(data                = htm,
-                                 measurements        = input$NormFeatures,
-                                 col_Experiment      = input$colBatch,
-                                 transformation      = input$NormDataTransform,
-                                 gradient_correction = input$NormGradientCorr,
-                                 normalisation       = input$NormMethod,
-                                 negcontrol          = input$NormNegCtrl,
-                                 col_QC              = col_QC,
-                                 col_Well            = input$colWell,
-                                 col_Treatment       = input$colTreatment,
-                                 num_WellX           = input$wells_X,
-                                 num_WellY           = input$wells_Y)
+        
+        withCallingHandlers({
+            html("echo_Normalization", "", add = FALSE)
+            
+            htm <<- htmNormalization(data                = htm,
+                                     measurements        = input$NormFeatures,
+                                     col_Experiment      = input$colBatch,
+                                     transformation      = input$NormDataTransform,
+                                     gradient_correction = input$NormGradientCorr,
+                                     normalisation       = input$NormMethod,
+                                     negcontrol          = input$NormNegCtrl,
+                                     col_QC              = col_QC,
+                                     col_Well            = input$colWell,
+                                     col_Treatment       = input$colTreatment,
+                                     num_WellX           = input$wells_X,
+                                     num_WellY           = input$wells_Y)
+        },
+            message = function(m) html("echo_Normalization", m$message, add = TRUE)
+        )
+        
     })
 
 
@@ -497,34 +504,37 @@ shinyServer(function(input, output){
     })
     observeEvent(input$applySummary,{
         
-        temp <- htmTreatmentSummary(data                 = htm,
-                                    measurements         = input$SummaryMeasurements,
-                                    col_Experiment       = input$colBatch,
-                                    col_Treatment        = input$colTreatment,
-                                    col_ObjectCount      = input$SummaryNumObjects,
-                                    col_QC               = col_QC,
-                                    negative_ctrl        = input$SummaryNegCtrl,
-                                    positive_ctrl        = input$SummaryPosCtrl,
-                                    excluded_Experiments = "")
-
-        # Display the summary table in the html page
-        output$TreatmentSummaryTable <- renderDataTable(temp[,c("treatment", "median__means", "t_test__p_value", "t_test__signCode", "numObjectsOK", "numImagesOK", "numReplicatesOK")])
-        
-        # Save summary table
-        path <- tclvalue(tkgetSaveFile(initialfile = paste0("TreatmentSummary--", input$SummaryMeasurements, ".csv")))
-        write.csv(temp, path, row.names = FALSE)
-        
-        generateSummaryReport <- function(){
+        withCallingHandlers({
+            html("echo_TreatmentSummary", "", add = FALSE)
+            
+            temp <- htmTreatmentSummary(data                 = htm,
+                                        measurements         = input$SummaryMeasurements,
+                                        col_Experiment       = input$colBatch,
+                                        col_Treatment        = input$colTreatment,
+                                        col_ObjectCount      = input$SummaryNumObjects,
+                                        col_QC               = col_QC,
+                                        negative_ctrl        = input$SummaryNegCtrl,
+                                        positive_ctrl        = input$SummaryPosCtrl,
+                                        excluded_Experiments = "")
+            
+            # Display the summary table in the html page
+            output$TreatmentSummaryTable <- renderDataTable(temp[,c("treatment", "median__means", "t_test__p_value", "t_test__signCode", "numObjectsOK", "numImagesOK", "numReplicatesOK")])
+            
+            # Save summary table
+            echo("")
+            echo("Please save the summary table using the popup window.")
+            path <- tclvalue(tkgetSaveFile(initialfile = paste0("TreatmentSummary--", input$SummaryMeasurements, ".csv")))
+            write.csv(temp, path, row.names = FALSE)
+            
             if(path == ""){
-                print("Did not save treatment summary table!")
+                echo("Did not save treatment summary table!")
             } else{
-                print(paste0("Saved summary table to ", path))
+                echo("Saved summary table to ", path)
             }
-        }
-        
-        # Echo Summary messages to the R console and html page
-        generateSummaryReport()
-        output$SummaryReport <- renderPrint(generateSummaryReport())
+            
+        },
+            message = function(m) html("echo_TreatmentSummary", m$message, add = TRUE)
+        )
         
     })
 

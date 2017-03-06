@@ -6,7 +6,7 @@
 
 
 #
-# Startup
+# Generic functions
 #
 loadpackage <- function(pckg){
     if(!(pckg %in% installed.packages())){
@@ -14,6 +14,14 @@ loadpackage <- function(pckg){
     }
     library(pckg, character.only=TRUE)
 }
+
+# Print a string to the R console and to the webpage
+echo <- function(...){
+    temp <- do.call("paste0", list(...))
+    print(temp)
+    message(temp)
+}
+
 
 
 
@@ -281,14 +289,18 @@ applyQC <- function(df, dfQC){
 
     # Make sure the data frame only contains character variables (no factors wanted!)
     dfQC[] <- lapply(dfQC, as.character)
-    
+
     apply(df, 1, function(x){
 
         QCoverall <- NULL
         for(i in 1:nrow(dfQC)){
             
             testvalue <- x[dfQC[i, "measurement"]]
-            
+            if(is.na(testvalue)){                   # Make sure "NA" is correctly interpreted
+                testvalue <- "NA"}
+            if(is.nan(testvalue)){                  # Make sure "NaN" is correctly interpreted
+                testvalue <- "NaN"}
+
             temp <- switch (as.character(dfQC[i,"type"]),
                 "Numeric QC"        = if(is.na(testvalue)){
                                             FALSE
@@ -320,10 +332,10 @@ applyQC <- function(df, dfQC){
 
 htmNormalization <- function(data, measurements, col_Experiment, transformation, gradient_correction, normalisation, negcontrol, col_QC, col_Well, col_Treatment, num_WellX, num_WellY) {
 
-    print("*")
-    print("* Data normalization")
-    print("*" )
-    print("")
+    echo("*")
+    echo("* Data normalization")
+    echo("*")
+    echo("")
 
     
     # remove previously computed columns
@@ -343,10 +355,10 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
     # compute
     for (measurement in measurements) {
         
-        cat("\nMeasurement:\n")
-        print(measurement)
-        cat("\nNegative Control:\n")
-        print(negcontrol)
+        echo("Measurement:")
+        echo(measurement)
+        echo("Negative Control:")
+        echo("negcontrol")
         
         #
         # Check           
@@ -367,9 +379,9 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
         # Log2
         if(transformation == "log2") {
             
-            print("")
-            print("Log2:")
-            print(paste("  Input:", input))
+            echo("")
+            echo("Log2:")
+            echo("  Input: ", input)
             
             # compute log transformation
             # create new column name
@@ -381,9 +393,9 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
             idsSmEqZero <- which(data[[input]]<=0)
             data[idsGtZero,output] <- log2(data[idsGtZero,input]) 
             data[idsSmEqZero,output] <- NaN
-            print(paste("  Output:", output))
-            print(paste("  Number of data points:",length(data[[input]])))
-            print(paste("  NaN's due to <=0:",length(idsSmEqZero)))
+            echo("  Output: ", output)
+            echo("  Number of data points: ", length(data[[input]]))
+            echo("  NaN's due to <=0: ", length(idsSmEqZero))
             
             # todo: this should be at a more prominent position
             #print("Replacing -Inf in log scores ******************************")
@@ -411,7 +423,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
         
         if(gradient_correction == "median polish") {
             
-            print(paste("  median polish of", input))
+            echo("  median polish of ", input)
             
             # also store the background
             gradient = paste0("HTM_norm",paste0(manipulation,"__medpolish_gradient__"),measurement)
@@ -423,8 +435,8 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
             
             for(experiment in experiments) {
                 
-                print("")
-                print(paste("  Experiment:",experiment))
+                echo("")
+                echo("  Experiment: ",experiment)
                 
                 indices_all <- which((data[[col_Experiment]] == experiment))
                 #indices_ok <- which((data[[col_Experiment]] == experiment) & (data[[col_QC]]) & !is.na(data[[input]]))
@@ -446,7 +458,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
         
         if( gradient_correction %in% c("median 7x7","median 5x5","median 3x3")) {
             
-            print(paste("  median filter of", input))
+            echo("  median filter of ", input)
             
             gradient = paste0("HTM_norm",paste0(manipulation,"__",gradient_correction,"__gradient__"),measurement)
             manipulation <- paste0(manipulation,"__",gradient_correction,"__residuals__")
@@ -456,7 +468,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
             
             for(experiment in experiments) {
                 
-                print(paste("  Experiment:",experiment))
+                echo("  Experiment: ", experiment)
     
                 indices_all <- which((data[[col_Experiment]] == experiment))
                 indices_ok  <- which((data[[col_Experiment]] == experiment) & (data[[col_QC]]) & !is.na(data[[input]]))
@@ -488,7 +500,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
             # Variance = E(X^2)-E(X)^2
             # Z-Score = (Xi - E(X)) / Sqrt(E(X^2)-E(X)^2)
             
-            print(paste("  5x5 z-score filter of", input))
+            echo("  5x5 z-score filter of ", input)
             
             # also store the background
             standard_deviation = paste0("HTM_norm",paste0(manipulation,"__5x5_standard_deviation__"),measurement)
@@ -502,7 +514,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
             
             for(experiment in experiments) {
                 
-                print(paste("  Experiment:",experiment))
+                echo("  Experiment: ", experiment)
                 
                 indices_all <- which((data[[col_Experiment]] == experiment))
                 xy = htm_convert_wellNum_to_xy(data[indices_all, col_Well], num_WellX, num_WellY) 
@@ -524,16 +536,16 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
         
         if(normalisation != "None selected") {
             
-            print("")
-            print("Per batch normalisation:")
-            print(paste("  Method:",normalisation))
-            print(paste("  Input:",input))
+            echo("")
+            echo("Per batch normalisation:")
+            echo("  Method: ", normalisation)
+            echo("  Input: ", input)
 
             # init columns
             manipulation <- paste0(manipulation,normalisation,"__")
             output = paste0("HTM_norm",manipulation,measurement)
             data[[output]] = NA
-            print(paste("  Output:",output))
+            echo("  Output: ",output)
             
             # computation
             #cat("\nComputing normalisations...\n")
@@ -679,7 +691,7 @@ htmMedpolish <- function(xx, yy, val, num_PosX, num_PosY) {
 
 htmLocalMedian <- function(xx, yy, val, size, num_PosX, num_PosY) {
     
-    print(paste("  median filter with size", size))
+    echo("  median filter with size ", size)
     
     
     x <- htmXYVtoMatrix(xx, yy, val, num_PosX, num_PosY) # averaging for multi-sub-positions?
@@ -694,7 +706,7 @@ htmLocalMedian <- function(xx, yy, val, size, num_PosX, num_PosY) {
 
 htmLocalZScore <- function(xx, yy, val, size, num_PosX, num_PosY) {
     
-    print(paste("  local z_score filter with size", size))
+    echo("  local z_score filter with size ", size)
     
     
     x <- htmXYVtoMatrix(xx, yy, val, num_PosX, num_PosY) # averaging for multi-sub-positions?
@@ -745,10 +757,10 @@ htmMatrixToXYV <- function(xx, yy, m, mi) {
 
 htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatment, col_ObjectCount, col_QC, negative_ctrl, positive_ctrl, excluded_Experiments) {
     
-    print("")
-    print("Treatment Summary:")
-    print("******************")
-    print("")
+    echo("")
+    echo("Treatment Summary:")
+    echo("******************")
+    echo("")
     
     # get all necessary information
     measurement <- measurements
@@ -760,20 +772,20 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
     #colObjectCount <- colObjectCount
     
     # output
-    print(""); print("Experiments:")
-               print(experiments)
-    print(""); print(paste("Number of treatments:",length(treatments)))
-    print(""); print(paste("Negative control:",negative_ctrl))
-    print(""); print(paste("Positive control:",positive_ctrl))
-    print(""); print(paste("Measurement:",measurement))
-    print(""); print("")
+    echo(""); echo("Experiments:")
+              echo(experiments)
+    echo(""); echo("Number of treatments: ", length(treatments))
+    echo(""); echo("Negative control: ", negative_ctrl)
+    echo(""); echo("Positive control: ", positive_ctrl)
+    echo(""); echo("Measurement: ", measurement)
+    echo(""); echo("")
     
     if(!(measurement %in% names(data))) {
-        print(paste("ERROR: measurement",measurement,"does not exist in data"))
+        echo("ERROR: measurement ", measurement, " does not exist in data")
         return(0)
     }
     if(!(col_ObjectCount %in% names(data))) {
-        print(paste("ERROR: object count",measurement,"does not exist in data"))
+        echo("ERROR: object count ", measurement, " does not exist in data")
         return(0)
     }
     
@@ -813,7 +825,7 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
     # Compute stats
     ###################################
     
-    print("Computing statistics...")
+    echo("Computing statistics...")
     ids_treatments = split(1:nrow(data), data[[col_Treatment]])
     
     i=0
@@ -894,18 +906,18 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
                 
                 tryCatch(z_scores <- (means_treat - means_ctrl) / sds_ctrl
                          , error = function(e) {
-                             print(d)
-                             print(treat)
-                             print(means_treat)
-                             print(negative_ctrl)
-                             print(means_ctrl)
+                             echo(d)
+                             echo(treat)
+                             echo(means_treat)
+                             echo(negative_ctrl)
+                             echo(means_ctrl)
                              #print(sds_ctrl)
-                             print(z_scores)
-                             print(ids)
-                             print(idsOld)
-                             print(data[ids,])
-                             print(data[idsOld,])
-                             print(e)
+                             echo(z_scores)
+                             echo(ids)
+                             echo(idsOld)
+                             echo(data[ids,])
+                             echo(data[idsOld,])
+                             echo(e)
                              
                              
                              ddd
@@ -963,8 +975,8 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
     }  # treatment loop   
     
     
-    print("")
-    print("done. Created Treatment Summary Table.")
+    echo("")
+    echo("done. Created Treatment Summary Table.")
     
     
     # Diagnostics 
@@ -1010,14 +1022,14 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
     
     if(positive_ctrl != "None selected") {
         
-        print("")
-        print("")
-        print("Checking positive and negative control separation in each batch:")
-        print("")
-        print(paste("Measurement:",measurement))
-        print(paste("Positive control:",positive_ctrl))
-        print(paste("Negative control:",negative_ctrl))
-        print("")
+        echo("")
+        echo("")
+        echo("Checking positive and negative control separation in each batch:")
+        echo("")
+        echo("Measurement: ", measurement)
+        echo("Positive control: ", positive_ctrl)
+        echo("Negative control: ", negative_ctrl)
+        echo("")
         
         z_scores = c()
         
@@ -1056,12 +1068,12 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
                 comment = ""
             #}
             
-            print(paste0(comment,exp,"; N_neg: ",n_neg,"; N_pos: ",n_pos,"; mean z-score of positive controls: ",round(z_score,3)," ",quality)) #,"  t-value: ",t_value))
+            echo(comment, exp, "; N_neg: ", n_neg, "; N_pos: ", n_pos, "; mean z-score of positive controls: ", round(z_score,3), " ", quality) #,"  t-value: ",t_value))
             
         }
         
-        print("")
-        print(paste("z-scores (N, mean, sd):",length(z_scores),mean(z_scores, na.rm=T),sd(z_scores, na.rm=T)))
+        echo("")
+        echo("z-scores (N, mean, sd): ", length(z_scores), " ", mean(z_scores, na.rm=T), " ", sd(z_scores, na.rm=T))
         
     }
     

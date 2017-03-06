@@ -104,7 +104,7 @@ shinyUI(navbarPage("shinyHTM",
         actionButton("applyQC", "Apply QCs now", icon = icon("paper-plane-o")),
         
         p(""),
-        verbatimTextOutput("QCreport")
+        verbatimTextOutput("echo_QC")
     ),
 
 
@@ -119,7 +119,10 @@ shinyUI(navbarPage("shinyHTM",
         checkboxInput("NormCombinedVecror", "[DISABLED] Compute combined vector for all selected measurements?"),
         selectInput("NormMultiply", "[DISABLED] Multiply with cos(tetha)^N along average treatment effect; N=", choices = list(0,1,2,4,8,16,32)),
         hr(),
-        actionButton("applyNorm", "Normalize", icon = icon("paper-plane-o"))
+        actionButton("applyNorm", "Normalize", icon = icon("paper-plane-o")),
+        hr(),
+        shinyjs::useShinyjs(),
+        verbatimTextOutput("echo_Normalization")
     ),
 
 
@@ -134,7 +137,7 @@ shinyUI(navbarPage("shinyHTM",
         
         br(),
         br(),
-        verbatimTextOutput("SummaryReport"),
+        verbatimTextOutput("echo_TreatmentSummary"),
         
         br(),
         br(),
