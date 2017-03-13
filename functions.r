@@ -205,6 +205,7 @@ OpenInFiji <- function(filePath, FijiPath = "C:\\Fiji.app\\ImageJ-win64.exe"){
     
     # Evoke Fiji with the expression compiled above
     cmd <- paste0("\"", FijiPath, "\" -debug", fileexpression)
+    print(cmd)
     system(cmd)
 }
 
