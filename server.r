@@ -77,7 +77,7 @@ shinyServer(function(input, output){
     })
     output$UIfiji_path        <- renderUI({
         if (Sys.info()['sysname'] == "Windows"){
-            return(textInput("fiji_binary", "Path to Fiji (only necessary for Windows)", value = "C:/Fiji.app/ImageJ-win64.exe"))
+            return(textInput("fiji_binary", "Path to (only necessary for Windows)", value = "C:/Fiji.app/ImageJ-win64.exe"))
         } else {
             return("/Applications/Fiji.app/Contents/MacOS/ImageJ-macosx")
         }
@@ -404,6 +404,7 @@ shinyServer(function(input, output){
             FullPathFile <- sub(tempPathInTable, tempPathInComputer, tempFullPathName, ignore.case = TRUE)
 
             print(paste0("Launching Fiji: ",input$fiji_binary))
+            print(paste0("Launching Fiji: ",output$UIfiji_path))
             print(FullPathFile)
             OpenInFiji(FullPathFile, input$fiji_binary)
             
