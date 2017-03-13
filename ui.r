@@ -1,16 +1,21 @@
+library(shiny)
+library(plotly)
+library(shinyjs)
+library(ggplot2)
+
 shinyUI(navbarPage("shinyHTM",
 
-
-
-
+    
+                   
+                   
     tabPanel("1. Upload data",
         helpText("Upload an image table (must be a comma-separated, tab-sepatated or Excel file)."),
         fileInput('file1', 'Choose File', accept=c('.csv', '.txt', '.xlsx', '.xls'))
     ),
 
-
-
-
+    
+    
+    
     tabPanel("2. Configure settings",
         h2("Settings"),
         h3("Select column names containing..."),
