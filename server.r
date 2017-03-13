@@ -403,7 +403,7 @@ shinyServer(function(input, output){
             tempFullPathName <- gsub("\\\\", "/", tempFullPathName)
             FullPathFile <- sub(tempPathInTable, tempPathInComputer, tempFullPathName, ignore.case = TRUE)
 
-            print(paste0("Launching Fiji: ",input$fiji_binary)
+            print(paste0("Launching Fiji: ",input$fiji_binary))
             print(FullPathFile)
             OpenInFiji(FullPathFile, input$fiji_binary)
             
