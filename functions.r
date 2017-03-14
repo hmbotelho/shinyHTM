@@ -227,7 +227,6 @@ generateHeatmapCoordinates <- function(WellX, WellY, PosX, PosY, subposjitter = 
         }
     }
     
-    
     # Map subposition array
     posLayout <- matrix(1:numSubpos, PosY, PosX, byrow = TRUE, dimnames = list(LETTERS[1:PosY], 1:PosX))
     
