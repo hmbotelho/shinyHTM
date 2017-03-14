@@ -23,9 +23,6 @@ echo <- function(...){
 }
 
 
-
-
-
 # Reads a data.frame from csv, tsv, xls and xlsx files. The file format is auto-detected.
 read.HTMtable <- function(filepath){
     # filepath : full path to file. includes the filename. In Windows this is a temporary folder where the file is named '0'
@@ -189,9 +186,6 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
 }
 
 
-
-
-
 # Can open multiple files at once
 # filePath is an array of character strings
 OpenInFiji <- function(filePath, FijiPath = "C:\\Fiji.app\\ImageJ-win64.exe"){
@@ -203,9 +197,14 @@ OpenInFiji <- function(filePath, FijiPath = "C:\\Fiji.app\\ImageJ-win64.exe"){
         fileexpression <- paste0(fileexpression, " -eval \"open('/", path, "')\"")
     }
     
-    # Evoke Fiji with the expression compiled above
     cmd <- paste0("\"", FijiPath, "\" -debug", fileexpression)
+    
+    # print command for user info and debugging
+    print(cmd)
+    
+    # Evoke Fiji with the expression compiled above
     system(cmd)
+    
 }
 
 # Generate coordinates for heatmap
@@ -227,7 +226,6 @@ generateHeatmapCoordinates <- function(WellX, WellY, PosX, PosY, subposjitter = 
             )
         }
     }
-    
     
     # Map subposition array
     posLayout <- matrix(1:numSubpos, PosY, PosX, byrow = TRUE, dimnames = list(LETTERS[1:PosY], 1:PosX))

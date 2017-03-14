@@ -18,8 +18,6 @@ loadpackage("xlsx")
 loadpackage("shinyjs")
 
 
-
-
 # Adjust maximum upload size to 2 Gb
 options(shiny.maxRequestSize=2*1024^3)
 
@@ -75,13 +73,22 @@ shinyServer(function(input, output){
         
         selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)))
     })
+    
     output$UIfiji_path        <- renderUI({
-        if (Sys.info()['sysname'] == "Windows"){
-            return(textInput("fiji_binary", "Path to Fiji (only necessary for Windows)", value = "C:/Fiji.app/ImageJ-win64.exe"))
-        } else {
-            return("/Applications/Fiji.app/Contents/MacOS/ImageJ-macosx")
+        
+        if (Sys.info()['sysname'] == "Windows")
+        {
+            fiji_binary_path = "C:/Fiji.app/ImageJ-win64.exe"
+        } 
+        else 
+        {
+            fiji_binary_path = "/Applications/Fiji.app/Contents/MacOS/ImageJ-macosx"
         }
+
+        textInput("fiji_binary", "Path to Fiji ", value = fiji_binary_path)
+    
     })
+    
     output$UIavailableimages  <- renderUI({
         input$file1
         img_names <- gsub(paste0("^", input$prefixPath, "(.*)"), "\\1", names(htm)[grep(paste0("^", input$prefixPath), names(htm))])
@@ -403,8 +410,8 @@ shinyServer(function(input, output){
             tempFullPathName <- gsub("\\\\", "/", tempFullPathName)
             FullPathFile <- sub(tempPathInTable, tempPathInComputer, tempFullPathName, ignore.case = TRUE)
 
-            print("Launching Fiji now....")
-            print(FullPathFile)
+            #print(paste0("Launching Fiji: ",input$fiji_binary))
+            #print(FullPathFile)
             OpenInFiji(FullPathFile, input$fiji_binary)
             
         }
