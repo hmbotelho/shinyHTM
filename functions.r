@@ -173,7 +173,7 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
     
     # Other plot settings
     g <- g + geom_point(size=symbolsize, shape=symbols) + 
-        scale_color_gradient2(midpoint=mean(df[[measurement]]), low="blue", mid="white", high="red") +
+        scale_color_gradient2(midpoint=mean(df[[measurement]], na.rm = TRUE), low="blue", mid="white", high="red") +
         ggtitle(batch) + 
         theme(panel.grid = element_blank()) +
         scale_x_continuous(breaks=1:ncolumns) + 
