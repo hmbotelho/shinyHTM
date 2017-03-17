@@ -53,25 +53,25 @@ shinyServer(function(input, output){
         input$file1
         input$applyNorm
         
-        selectInput("colTreatment", "Treatment:", as.list(names(htm)))
+        selectInput("colTreatment", "Treatment:", as.list(names(htm)), width = "100%")
     })
     output$UIcolNameBatch     <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("colBatch", "Batch:", as.list(names(htm)))
+        selectInput("colBatch", "Batch:", as.list(names(htm)), width = "100%")
     })
     output$UIcolNameWell      <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("colWell", "Well coordinate:", as.list(names(htm)))
+        selectInput("colWell", "Well coordinate:", as.list(names(htm)), width = "100%")
     })
     output$UIcolNamePos       <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)))
+        selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), width = "100%")
     })
     
     output$UIfiji_path        <- renderUI({
@@ -85,7 +85,7 @@ shinyServer(function(input, output){
             fiji_binary_path = "/Applications/Fiji.app/Contents/MacOS/ImageJ-macosx"
         }
 
-        textInput("fiji_binary", "Path to Fiji ", value = fiji_binary_path)
+        textInput("fiji_binary", "Path to Fiji ", value = fiji_binary_path, width = "100%")
     
     })
     
@@ -424,27 +424,27 @@ shinyServer(function(input, output){
         input$file1
         input$applySummary
         
-        selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), multiple = FALSE)
+        selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), width = "100%", multiple = FALSE)
     })
     output$UINormDataTransform <- renderUI({
         input$file1
         
-        selectInput("NormDataTransform", "Data transformation", choices = list("None selected", "log2"))
+        selectInput("NormDataTransform", "Data transformation", choices = list("None selected", "log2"), width = "100%")
     })
     output$UINormGradientCorr  <- renderUI({
         input$file1
         
-        selectInput("NormGradientCorr", "Batch-wise spatial gradient correction", choices = list("None selected", "median polish", "median 7x7", "median 5x5", "median 3x3", "z-score 5x5"))
+        selectInput("NormGradientCorr", "Batch-wise spatial gradient correction", choices = list("None selected", "median polish", "median 7x7", "median 5x5", "median 3x3", "z-score 5x5"), width = "100%")
     })
     output$UINormMethod        <- renderUI({
         input$file1
         
-        selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"))
+        selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"), width = "100%")
     })
     output$UINormNegCtrl       <- renderUI({
         input$file1
         
-        selectInput("NormNegCtrl", "Negative control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))))
+        selectInput("NormNegCtrl", "Negative control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))), width = "100%")
     })
     
     observeEvent(input$applyNorm,{
@@ -477,26 +477,26 @@ shinyServer(function(input, output){
         input$file1
         input$applyNorm
         
-        selectInput("SummaryMeasurements", "Measurements to be analyzed", choices = as.list(names(htm)), multiple = TRUE)
+        selectInput("SummaryMeasurements", "Measurements to be analyzed", choices = as.list(names(htm)), width = "100%", multiple = TRUE)
     })
     output$UISummaryNegCtrl      <- renderUI({
         input$file1
         input$applyNorm
         input$NormNegCtrl
         
-        selectInput("SummaryNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))))
+        selectInput("SummaryNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))), width = "100%")
     })
     output$UISummaryPosCtrl      <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("SummaryPosCtrl", "Positive control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))))
+        selectInput("SummaryPosCtrl", "Positive control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))), width = "100%")
     })
     output$UISummaryNumObjects   <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("SummaryNumObjects", "Number of objects per image", choices = as.list(names(htm)))
+        selectInput("SummaryNumObjects", "Number of objects per image", choices = as.list(names(htm)), width = "100%")
     })
     
     observeEvent(input$SummaryMeasurements,{
@@ -551,6 +551,11 @@ shinyServer(function(input, output){
         
     })
 
+    
+    
+    # R Console
+    runcodeServer()
+    
     
     
     # Data table

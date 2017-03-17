@@ -7,10 +7,12 @@ library(xlsx)
 
 shinyUI(navbarPage("shinyHTM",
 
-    
+    # Initialize shinyjs
+    shinyjs::useShinyjs(),
                    
                    
     tabPanel("1. Upload data",
+        h2("Upload data"),
         helpText("Upload an image table (must be a comma-separated, tab-sepatated or Excel file)."),
         fileInput('file1', 'Choose File', accept=c('.csv', '.txt', '.xlsx', '.xls'))
     ),
@@ -34,8 +36,8 @@ shinyUI(navbarPage("shinyHTM",
         uiOutput("UIavailableimages"),
         hr(),
         
-        textInput("pathInTable", "Image root folder name in table", "c:\\tutorial\\myplate_01"),
-        textInput("pathInComputer", "Image root folder name in this computer", "c:\\myplate_01"),
+        textInput("pathInTable", "Image root folder name in table", "c:\\tutorial\\myplate_01", width = "100%"),
+        textInput("pathInComputer", "Image root folder name in this computer", "c:\\myplate_01", width = "100%"),
         textInput("prefixPath", "Prefix: column with folder name", "PathName_"),
         textInput("prefixFile", "Prefix: column with file name", "FileName_"),
         hr(),
@@ -53,6 +55,8 @@ shinyUI(navbarPage("shinyHTM",
 
 
     tabPanel("3. Plot",
+        h2("Plotting"),
+        p("Use this plotting tool to explore your data and inspect the images which produced each data point."),
         verbatimTextOutput("selection"),
         plotlyOutput("plot"),
         hr(),
@@ -98,6 +102,8 @@ shinyUI(navbarPage("shinyHTM",
 
 
     tabPanel("4. Quality Control",
+        h2("Quality Control"),
+        p("Use this tool to exclude some images from analysis."),
         uiOutput("UIQCfailedExperiments"),
         uiOutput("UIQCnumeric"),
         uiOutput("UIQCtext"),
@@ -123,6 +129,8 @@ shinyUI(navbarPage("shinyHTM",
 
 
     tabPanel("5. Normalization",
+        h2("Normalization"),
+        p("Normalize your data, on a plate-by-plate basis."),
         uiOutput("UINormFeatures"),
         uiOutput("UINormDataTransform"),
         uiOutput("UINormGradientCorr"),
@@ -133,7 +141,6 @@ shinyUI(navbarPage("shinyHTM",
         hr(),
         actionButton("applyNorm", "Normalize", icon = icon("paper-plane-o")),
         hr(),
-        shinyjs::useShinyjs(),
         verbatimTextOutput("echo_Normalization")
     ),
 
@@ -141,6 +148,8 @@ shinyUI(navbarPage("shinyHTM",
 
 
     tabPanel("6. Treatment summary",
+        h2("Treatment Summary"),
+        p("Average all measurements coming from the same treatment, regardless of the number of measurements (i.e. images)"),
         uiOutput("UISummaryMeasurements"),
         uiOutput("UISummaryNegCtrl"),
         uiOutput("UISummaryPosCtrl"),
@@ -157,6 +166,20 @@ shinyUI(navbarPage("shinyHTM",
     ),
 
 
+    
+    
+    tabPanel("R Console",
+        h2("R Console"),
+        p("Use this text area to write R commands. Resuts will be shown in the R console, outside this website."),
+        p("Click the \"run\" button to run the code"),
+        p("You may need to use the print() function for your results to show up."),
+        br(),
+        runcodeUI(code = "print(\"Inside shinyHTM your image table is called 'htm'\")\nprint(\"This is a summary of of it:\")\nprint(\"==============================================================\")\nstr(htm)", 
+                  type = "textarea", 
+                  width = "800",
+                  height = "100")
+    ),
+    
 
 
     navbarMenu("More",
@@ -167,8 +190,9 @@ shinyUI(navbarPage("shinyHTM",
         
         tabPanel("About",
             
-            p("By Hugo Botelho, Aug 2016"),
+            p("By Hugo Botelho, March 2017"),
             a(href="mailto:hugobotelho@gmail.com", "hugobotelho@gmail.com"),
+            a(href="http://webpages.fc.ul.pt/~hmbotelho", "http://webpages.fc.ul.pt/~hmbotelho"),
             hr(),
             p("Check for updates on GitHub"),
             a(href="https://github.com/hmbotelho/shinyHTM", "https://github.com/hmbotelho/shinyHTM")

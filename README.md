@@ -50,7 +50,7 @@ install.packages(c("shiny", "plotly","shinyjs","xlsx"))
 * Type the following commands:  
 ```r
 library(shiny)
-runGitHub("shinyHTM", "tischi")
+runGitHub("shinyHTM", "hmbotelho")
 ```
 * This will run the latest version of shinyHTM  
 * Sample datasets are provided [here](https://github.com/hmbotelho/sample_data).  
