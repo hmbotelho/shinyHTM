@@ -86,7 +86,7 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, spl
 
 
     # Define the data to be plotted
-    g <- ggplot(df, aes_string(x, y)) + ggtitle(batch)
+    g <- ggplot(df, aes_string(x, y)) + ggtitle(batch) + scale_colour_gradient2()
 
     
     # Calculate the symbol to be used at each data point
@@ -153,14 +153,23 @@ boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highl
 }
 
 # Generate Plotly heatmap
-heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed){
-    
+heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf){
+
     # Initialize variables
     plotSymbols <- c(approved = 15, rejected = 4)
-    
-    
+    colorGrad   <- c("red2", "white", "green4")
+
+  
+    # Column 'LUT' has numeric values which are solely used for the color lookup table
+    df$LUT <- sapply(df[[measurement]], function(f){
+        if(f <= colorMin) return(colorMin)
+        if(f >= colorMax) return(colorMax)
+        f
+    })
+
+
     # Define the data to be plotted
-    g <- ggplot(df, aes_string("heatX", "heatY", color = measurement))
+    g <- ggplot(df, aes(heatX, heatY, color = LUT))
     
     
     # Calculate the symbol to be used at each data point
@@ -173,7 +182,7 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
     
     # Other plot settings
     g <- g + geom_point(size=symbolsize, shape=symbols) + 
-        scale_color_gradient2(midpoint=mean(df[[measurement]], na.rm = TRUE), low="blue", mid="white", high="red") +
+        scale_colour_gradientn(colors = colorGrad) + 
         ggtitle(batch) + 
         theme(panel.grid = element_blank()) +
         scale_x_continuous(breaks=1:ncolumns) + 
@@ -280,7 +289,7 @@ makeHeatmapDataFrame <- function(df, WellX, WellY, PosX, PosY, subposjitter = 0.
         df[i, "heatX"] <- xy[1,"X"]
         df[i, "heatY"] <- xy[1,"Y"]
     }
-    
+  
     df
 }
 

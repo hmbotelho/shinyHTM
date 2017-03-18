@@ -119,6 +119,8 @@ shinyServer(function(input, output){
                 
                 output$UIBoxplothighlightCenter <- renderUI(NULL)
                 output$UIBoxplotsplitBy <- renderUI(NULL)
+                
+                output$UILUTminmax <- renderUI(NULL)
             },
             "Boxplot"      = {
                 output$UIselectXaxis <- renderUI(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%"))
@@ -132,6 +134,8 @@ shinyServer(function(input, output){
                 
                 output$UIBoxplothighlightCenter <- renderUI(selectInput("BoxplothighlightCenter", "Highlight box center?", choices = list("No", "Mean", "Median")))
                 output$UIBoxplotsplitBy <- renderUI(selectInput("BoxplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
+                
+                output$UILUTminmax <- renderUI(NULL)
             },
             "Heatmap"      = {
                 output$UIselectXaxis <- renderUI(NULL)
@@ -145,6 +149,12 @@ shinyServer(function(input, output){
                 
                 output$UIBoxplothighlightCenter <- renderUI(NULL)
                 output$UIBoxplotsplitBy         <- renderUI(NULL)
+                
+                output$UILUTminmax <- renderUI({
+                    Ymin <- min(htm[[input$Yaxis]], na.rm = TRUE)
+                    Ymax <- max(htm[[input$Yaxis]], na.rm = TRUE)
+                    sliderInput("LUTminmax", "LUT adjustment", min = Ymin, max = Ymax, value = c(Ymin, Ymax), width = "100%")
+                })
             }
         )
     })
@@ -152,7 +162,7 @@ shinyServer(function(input, output){
     htmHM <- reactive({
 
         if(input$batch == "All batches") return(NULL)
-        
+
         makeHeatmapDataFrame(df           = htm, 
                              WellX        = input$wells_X,
                              WellY        = input$wells_Y,
@@ -173,7 +183,7 @@ shinyServer(function(input, output){
         switch(input$plotType,
                "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy, filterByColumn = input$PointplotfilterColumn, whichValues = input$PointplotfilterValues),
                "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy),
-               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed)
+               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2])
         )
     })
 

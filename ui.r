@@ -71,6 +71,7 @@ shinyUI(navbarPage("shinyHTM",
             column(7,
                 uiOutput("UIselectXaxis"),
                 uiOutput("UIselectYaxis"),
+                uiOutput("UILUTminmax"),
                 br(),br(),
                 
                 uiOutput("UIhighlightQCfailed"),
