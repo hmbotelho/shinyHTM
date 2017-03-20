@@ -144,6 +144,7 @@ boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highl
     }
     if(splitBy != "None"){
         g <- g + 
+
         facet_grid(as.formula(paste("~", splitBy)), scales = "free_x") + 
         theme(strip.text.x = element_text(angle = 90))
     }
@@ -162,6 +163,7 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
   
     # Column 'LUT' has numeric values which are solely used for the color lookup table
     df$LUT <- sapply(df[[measurement]], function(f){
+        if(is.na(f)) return(f)
         if(f <= colorMin) return(colorMin)
         if(f >= colorMax) return(colorMax)
         f
