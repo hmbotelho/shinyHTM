@@ -17,6 +17,7 @@ loadpackage("ggplot2")
 loadpackage("tcltk")
 loadpackage("xlsx")
 loadpackage("shinyjs")
+loadpackage("raster")
 
 
 # Adjust maximum upload size to 2 Gb

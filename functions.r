@@ -364,9 +364,9 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
     # get all necessary information
     measurements        <- sort(measurements)
     experiments         <- sort(unique(data[[col_Experiment]]))
+    gradient_correction <- gsub("-", "_", gradient_correction)        # The dash character '-' is mishandled by the selectInput widgets of shiny
+    normalisation       <- gsub("-", "_", normalisation)              # The dash character '-' is mishandled by the selectInput widgets of shiny
 #    transformation      <- transformation
-#    gradient_correction <- gradient_correction
-#    normalisation       <- normalisation
 #    negcontrol          <- negcontrol
     
     
@@ -513,7 +513,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
         } #median filter
         
         
-        if( gradient_correction %in% c("z-score 5x5")) {
+        if( gradient_correction %in% c("z_score 5x5")) {
             # Mean = E(X)
             # Variance = E(X^2)-E(X)^2
             # Z-Score = (Xi - E(X)) / Sqrt(E(X^2)-E(X)^2)
@@ -604,10 +604,10 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
                 #print(paste("    Control Median:", mediancontrol))
                 #print(paste("    Control MAD:", madcontrol))
                 
-                if(normalisation == "z-score") {
+                if(normalisation == "z_score") {
                     data[indices_all, output] <- ( data[indices_all, input] - meancontrol ) / sigmacontrol
                 } 
-                else if(normalisation == "robust z-score") {
+                else if(normalisation == "robust z_score") {
                     data[indices_all, output] <- ( data[indices_all, input] - mediancontrol ) / madcontrol
                 } 
                 else if(normalisation == "subtract mean ctrl") {
