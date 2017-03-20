@@ -575,7 +575,14 @@ shinyServer(function(input, output){
         withCallingHandlers({
             html("echo_SaveLoadSession", "", add = FALSE)
             
-            echo("Dialog box: where shall the session file be saved?")
+            echo("Dialog box: Where is the image table file?")
+            echo("")
+            pathImageTable <- choose.files(caption = "Select the image table file",
+                                           multi = FALSE, filters = Filters["All",])
+            echo("Saving analysis session of image table '", pathImageTable, "'")
+            echo("")
+            
+            echo("Dialog box: Where shall the session file be saved?")
             echo("")
             targetpath <- tclvalue(tkgetSaveFile(initialfile = "settings.r"))
             
@@ -593,7 +600,7 @@ shinyServer(function(input, output){
             # Extract the selected settings
             HTMsettings <- list(HTMdf               = HTMdf,
                                 
-                                pathImageTable      = isolate(input$file1$datapath),
+                                pathImageTable      = pathImageTable,
                                 
                                 colTreatment        = isolate(input$colTreatment), 
                                 colBatch            = isolate(input$colBatch), 
@@ -616,8 +623,6 @@ shinyServer(function(input, output){
             
             dput(HTMsettings, targetpath)
             echo("Done!")
-            echo("")
-            echo("TO PROPERLY RESTORE THE THE IMAGE TABLE YOU NEED TO EDIT THE SETTINGS FILE AND INCLUDE THE CORRECT LOCATION OF THE IMAGE TABLE FILE IN 'pathImageTable ='")
             
         },
         message = function(m) html("echo_SaveLoadSession", m$message, add = TRUE)
@@ -643,6 +648,7 @@ shinyServer(function(input, output){
             htm <- read.HTMtable(HTMsettings[["pathImageTable"]])
             htm <- cbind(htm, HTMsettings[["HTMdf"]])
             htm <<- htm
+            output$valuestable <- renderDataTable(htm)
             echo("     done")
             
             
