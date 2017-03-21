@@ -609,9 +609,12 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
                 if(normalisation == "z_score") {
                     data[indices_all, output] <- ( data[indices_all, input] - meancontrol ) / sigmacontrol
                 } 
+                else if(normalisation == "z_score (median subtraction)") {
+                    data[indices_all, output] <- ( data[indices_all, input] - mediancontrol ) / sigmacontrol
+                }
                 else if(normalisation == "robust z_score") {
                     data[indices_all, output] <- ( data[indices_all, input] - mediancontrol ) / madcontrol
-                } 
+                }
                 else if(normalisation == "subtract mean ctrl") {
                     data[indices_all, output] <- data[indices_all, input] - meancontrol 
                 }

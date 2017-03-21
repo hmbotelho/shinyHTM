@@ -451,7 +451,7 @@ shinyServer(function(input, output){
     output$UINormMethod        <- renderUI({
         input$file1
         
-        selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"), width = "100%")
+        selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "z-score (median subtraction)", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"), width = "100%")
     })
     output$UINormNegCtrl       <- renderUI({
         input$file1
