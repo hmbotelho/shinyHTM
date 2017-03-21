@@ -456,7 +456,7 @@ shinyServer(function(input, output){
     output$UINormNegCtrl       <- renderUI({
         input$file1
         
-        selectInput("NormNegCtrl", "Negative control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))), width = "100%")
+        selectInput("NormNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))), width = "100%")
     })
     
     observeEvent(input$applyNorm,{

@@ -376,9 +376,9 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
     for (measurement in measurements) {
         
         echo("Measurement:")
-        echo(measurement)
+        echo("     ", measurement)
         echo("Negative Control:")
-        echo("negcontrol")
+        echo("     ", negcontrol)
         
         #
         # Check           
@@ -577,7 +577,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
 
                 indices_all <- which((data[[col_Experiment]] == experiment))
                 indices_ok  <- which((data[[col_Experiment]] == experiment) & (data[[col_QC]]) & !is.na(data[[input]]))
-                
+
                 if("All treatments" %in% negcontrol) {
                     indices_controls_ok <- indices_ok
                 } else {
