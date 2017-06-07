@@ -29,33 +29,34 @@ read.HTMtable <- function(filepath){
     # filename : original filename
     # Requires package xlsx
     
-    tryCatch(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE), 
-             error = function(e){
-                 
-                 # File not Excel
-                 if(grepl("\t", readLines(filepath, n = 1))){
-                     
-                     # Tab-separated file
-                     return(read.csv(filepath, sep = "\t", stringsAsFactors = FALSE))
-                 }
-                 
-                 if(grepl(",", readLines(filepath, n = 1))){
-                     
-                     # Comma-separated file
-                     return(read.csv(filepath, sep = ",", stringsAsFactors = FALSE))
-                 }
-                 
-                 # Unknown file type
-                 warning("Unknown file format. Loading an empty data table.")
-                 return(data.frame())
-                 
-             },
-             finally = function(e){
-                 
-                 # Excel file
-                 return(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE))
-             }
-    )
+    # tryCatch(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE), 
+    #          error = function(e){
+    #              
+    #              # File not Excel
+    #              if(grepl("\t", readLines(filepath, n = 1))){
+    #                  
+    #                  # Tab-separated file
+    #                  return(read.csv(filepath, sep = "\t", stringsAsFactors = FALSE))
+    #              }
+    #              
+    #              if(grepl(",", readLines(filepath, n = 1))){
+    #                  
+    #                  # Comma-separated file
+    #                  return(read.csv(filepath, sep = ",", stringsAsFactors = FALSE))
+    #              }
+    #              
+    #              # Unknown file type
+    #              warning("Unknown file format. Loading an empty data table.")
+    #              return(data.frame())
+    #              
+    #          },
+    #          finally = function(e){
+    #              
+    #              # Excel file
+    #              return(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE))
+    #          }
+    # )
+    return(read.csv(filepath, sep = "\t", stringsAsFactors = FALSE))
 }
 
 
@@ -808,7 +809,7 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
         return(0)
     }
     if(!(col_ObjectCount %in% names(data))) {
-        echo("ERROR: object count ", measurement, " does not exist in data")
+        echo("ERROR: object count ", col_ObjectCount, " does not exist in data")
         return(0)
     }
     

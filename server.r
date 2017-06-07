@@ -9,13 +9,13 @@
 # Sync negative control across Normalize&Summarize
 # Update plot symbols each time QC is applied
 # Use a separate function to generate each 'selectInput' widget. This facilitates saving and loading states.
-
+enableBookmarking(store = "url")
 source("./functions.r")
 loadpackage("shiny")
 loadpackage("plotly")
 loadpackage("ggplot2")
 loadpackage("tcltk")
-loadpackage("xlsx")
+# loadpackage("xlsx")
 loadpackage("shinyjs")
 loadpackage("raster")
 
