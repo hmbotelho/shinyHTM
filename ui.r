@@ -2,7 +2,7 @@ library(shiny)
 library(plotly)
 library(shinyjs)
 library(ggplot2)
-library(xlsx)
+# library(xlsx)
 
 
 shinyUI(navbarPage("shinyHTM",
