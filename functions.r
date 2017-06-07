@@ -56,7 +56,7 @@ read.HTMtable <- function(filepath){
     #              return(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE))
     #          }
     # )
-    return(read.csv(filepath, sep = "\t", stringsAsFactors = FALSE))
+    return(read.csv(filepath, sep = ",", stringsAsFactors = FALSE))
 }
 
 
