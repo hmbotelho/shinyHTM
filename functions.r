@@ -99,7 +99,7 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, spl
 
     
     # Define the plot type (scatter vs jitter) depending on the data types
-    g <- if(class(df[[x]]) == "numeric" & class(df[[y]]) == "numeric"){
+    g <- if( is.numeric( df[[x]] ) & is.numeric( df[[y]] ) ){
         g + geom_point(shape = symbols)
     } else{
         g + geom_jitter(shape = symbols)

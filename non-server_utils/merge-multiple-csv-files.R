@@ -12,18 +12,16 @@ if (!require(plyr)) install.packages('plyr')
 
 rm(list=ls())#clear all variables
 
-inputPath<-'C:/tempDat/Tischi/small-test-image-sequences--analysis--20180221'
+inputPath<-'/Volumes/cba/tischer/projects/transmission-3D-stitching-organoid-size-measurement--data//small-test-image-sequences--analysis'
 outputFileName<-'merged_table.csv'
 dataset.Pattern<-'(?<Well>\\w[0-9]{1,2})--W(?<WellNum>[0-9]{5})--P(?<Position>[0-9]{5})--Z--T'
 fileNamePattern<-'\\w[0-9]{1,2}--W[0-9]{5}--P[0-9]{5}--Z--T--(?<Suffix>.*)\\.csv'#
-
 
 suffixes.Dataset.Tables<-c('ApplyClassifier')
 suffixes.Object.Tables<-c('foreground.tif--Volume--AnalyzeObjects','foreground.tif--BoundingBox--AnalyzeObjects','foreground.tif--Ellipsoid--AnalyzeObjects')
 
 columnLabel.Dataset<-'DataSetID_FACT'
 columnLabel.Object<-'Label'
-
 
 columnSeparator<-','
 decimalSeparator<-'.'
