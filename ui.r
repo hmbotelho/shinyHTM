@@ -185,7 +185,7 @@ shinyUI(navbarPage("shinyHTM",
 
     navbarMenu("More",
                
-        tabPanel("View Image Table",
+        tabPanel("View table",
             dataTableOutput("valuestable")
         ),
         

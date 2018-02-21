@@ -113,7 +113,7 @@ shinyServer(function(input, output){
                 output$UIselectXaxis <- renderUI(selectInput("Xaxis", "X axis:", choices = as.list(names(htm)), width = "200%"))
                 output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Y axis:", choices = as.list(names(htm)), width = "200%"))
                 
-                output$UIhighlightQCfailed     <- renderUI(checkboxInput("highlightQCfailed", "Show data points that did not pass QC", value = FALSE))
+                output$UIhighlightQCfailed     <- renderUI(checkboxInput("highlightQCfailed", "Highlight data points that did not pass QC", value = FALSE))
                 
                 output$UIPointplotsplitBy      <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
                 output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = as.list(c("None", names(htm))), width = "100%"))
@@ -407,25 +407,27 @@ shinyServer(function(input, output){
     # Plot-Fiji interaction
     output$selection <- renderPrint({
         s <- event_data("plotly_click")
-        if (length(s) == 0) {
-            "Click on a data point to open images!"
-        } else {
-            print("You selected:")
-            print(s)
-            i = s[["pointNumber"]] + 1
-            
-            openTheseImgChannels <- input$images2display
-            
-            tempPathInTable    <- gsub("\\\\", "/", input$pathInTable)
-            tempPathInComputer <- gsub("\\\\", "/", input$pathInComputer)
-            tempFullPathName <- paste0(htm[i, paste0(input$prefixPath, input$images2display)], "/", htm[i, paste0(input$prefixFile, input$images2display)])
-            tempFullPathName <- gsub("\\\\", "/", tempFullPathName)
-            FullPathFile <- sub(tempPathInTable, tempPathInComputer, tempFullPathName, ignore.case = TRUE)
+        if (length(s) == 0) 
+        {
+          "Click on a data point to open images!"
+        } 
+        else 
+        {
+          print("You selected:")
+          print(s)
+          i = s[["pointNumber"]] + 1
+          
+          openTheseImgChannels <- input$images2display
+          
+          tempPathInTable    <- gsub("\\\\", "/", input$pathInTable)
+          tempPathInComputer <- gsub("\\\\", "/", input$pathInComputer)
+          tempFullPathName <- paste0(htm[i, paste0(input$prefixPath, input$images2display)], "/", htm[i, paste0(input$prefixFile, input$images2display)])
+          tempFullPathName <- gsub("\\\\", "/", tempFullPathName)
+          FullPathFile <- sub(tempPathInTable, tempPathInComputer, tempFullPathName, ignore.case = TRUE)
 
-            #print(paste0("Launching Fiji: ",input$fiji_binary))
-            #print(FullPathFile)
-            OpenInFiji(FullPathFile, input$fiji_binary)
-            
+          print(paste0("Launching Fiji: ",input$fiji_binary))
+          print(FullPathFile)
+          OpenInFiji( FullPathFile, input$fiji_binary )
         }
     })
 

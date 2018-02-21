@@ -66,19 +66,20 @@ read.HTMtable <- function(filepath){
 pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", filterByColumn = "None", whichValues = "All"){
 
     # Initialize variables
-    plotSymbols <- c(approved = 20, rejected = 4)
+    plotSymbols <- c( approved = 20, rejected = 4 )
     
     
     # Subset batches
     if(batch != "All batches"){
-        df <- df[df[[batch_col]] == batch,]
+        df <- df[ df[[batch_col]] == batch, ]
     }
 
 
     # Subset by columns
     if(filterByColumn != "None"){
         if(!("All" %in% whichValues) & !is.null(whichValues)){
-            OKrows <- sapply(df[[filterByColumn]], function(x){
+            OKrows <- sapply( df[[filterByColumn]], function(x)
+            {
                 x %in% whichValues
             })
             df <- df[OKrows,]
@@ -89,31 +90,39 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, spl
     # Define the data to be plotted
     g <- ggplot(df, aes_string(x, y)) + ggtitle(batch) + scale_colour_gradient2()
 
-    
-    # Calculate the symbol to be used at each data point
-    symbols <- if(highlightQCfailed){
-        sapply(df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
-    } else{
-        plotSymbols["approved"]
+    # Assign symbol to be used at each data point
+    symbols <- if( highlightQCfailed )
+    {
+      sapply( df[[col_QC]], function(x) ifelse( x, plotSymbols["approved"], plotSymbols["rejected"] ) )
+    } 
+    else
+    {
+      # Do not show failed data points at all
+      df <- df[ df[[col_QC]] , ]
+      plotSymbols["approved"]
     }
 
     
     # Define the plot type (scatter vs jitter) depending on the data types
-    g <- if( is.numeric( df[[x]] ) & is.numeric( df[[y]] ) ){
-        g + geom_point(shape = symbols)
-    } else{
-        g + geom_jitter(shape = symbols)
+    # TODO: only jitter along non-numeric
+    g <- if( is.numeric( df[[x]] ) & is.numeric( df[[y]] ) )
+    {
+        g + geom_point( shape = symbols )
+    } 
+    else
+    {
+        g + geom_jitter( shape = symbols )
     }
 
     # Customize plot
     if(splitBy != "None"){
         g <- g + 
-            facet_grid(as.formula(paste("~", splitBy)), scales = "free_x") + 
-            theme(strip.text.x = element_text(angle = 90))
+            facet_grid( as.formula(paste("~", splitBy)), scales = "free_x" ) + 
+            theme( strip.text.x = element_text(angle = 90) )
     }
 
     # Output finished plot
-    ggplotly(g)
+    ggplotly( g )
 }
 
 # Generate Plotly boxplot
@@ -133,8 +142,7 @@ boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highl
 
     # Make plot
     g <- ggplot(df, aes_string(x, y))
-    g <- g + geom_boxplot() +
-        ggtitle(batch)
+    g <- g + geom_boxplot() + ggtitle(batch)
     
     # Customize plot
     if(highlightCenter != "No"){
@@ -200,22 +208,31 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
 
 # Can open multiple files at once
 # filePath is an array of character strings
-OpenInFiji <- function(filePath, FijiPath = "C:\\Fiji.app\\ImageJ-win64.exe"){
-    filePath <- gsub("\\\\", "/", filePath)
+OpenInFiji <- function( filePath, FijiPath = "C:\\Fiji.app\\ImageJ-win64.exe" ){
+    
+    # TODO: check whether this is necessary! 
+    # filePath <- gsub("\\\\", "/", filePath)
     
     # Generate the expression opening each image
     fileexpression <- ""
     for (path in filePath){
-        fileexpression <- paste0(fileexpression, " -eval \"open('/", path, "')\"")
+      if( grepl("\\?", path ) )
+      {
+        fileexpression <- paste0(fileexpression, " -eval 'run(\"Image Sequence...\", open=[", path, "] sort)'");
+      }
+      else
+      {
+        fileexpression <- paste0( fileexpression, " -eval 'open(\"/", path, "\")'" )
+      }
     }
-    
+
     cmd <- paste0("\"", FijiPath, "\" -debug", fileexpression)
     
     # print command for user info and debugging
-    print(cmd)
+    print( cmd )
     
     # Evoke Fiji with the expression compiled above
-    system(cmd)
+    system( cmd )
     
 }
 
