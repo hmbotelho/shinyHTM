@@ -208,32 +208,56 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
 
 # Can open multiple files at once
 # filePath is an array of character strings
-OpenInFiji <- function( filePath, FijiPath = "C:\\Fiji.app\\ImageJ-win64.exe" ){
+OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe" ){
     
-    # TODO: check whether this is necessary! 
-    # filePath <- gsub("\\\\", "/", filePath)
-    
+    num_images = length( directories );  
+  
+    import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\")";
+    open_image_template = "open(\"DIRECTORY/FILENAME\")";
+
     # Generate the expression opening each image
-    fileexpression <- ""
-    for (path in filePath){
-      if( grepl("\\?", path ) )
+    commands <- "import ij.IJ;\n"
+  
+    for ( i in seq(1, num_images) )
+    {
+      if( grepl("\\?", filenames[ i ] ) )
       {
-        fileexpression <- paste0(fileexpression, " -eval 'run(\"Image Sequence...\", open=[", path, "] sort)'");
+        
+        # directory
+        import_image_sequence_reg_exp <- sub( "DIRECTORY", directories[ i ], import_image_sequence_reg_exp_template, fixed = TRUE )
+        
+        # filename / regexp
+        reg_exp = gsub( "\\", "\\\\", filenames[ i ], fixed = TRUE )
+        import_image_sequence_reg_exp <- sub( "REGEXP", reg_exp, import_image_sequence_reg_exp, fixed = TRUE )
+        
+        commands <- paste0( commands, import_image_sequence_reg_exp, "\n" );
+      
       }
       else
       {
-        fileexpression <- paste0( fileexpression, " -eval 'open(\"/", path, "\")'" )
+        open_image = sub( "DIRECTORY", directories[ i ], open_image_template, fixed = TRUE )
+        open_image = sub( "DIRECTORY", filenames[ i ], open_image, fixed = TRUE )
+        commands <- paste0( commands, open_image, "\n" );
       }
     }
 
-    cmd <- paste0("\"", FijiPath, "\" -debug", fileexpression)
+    
+    # write commands to groovy script    
+    tmp_directory = paste0( getwd(), "/tmp" ) 
+    dir.create( tmp_directory, showWarnings = FALSE )
+    tmp_groovy_script = paste0( tmp_directory, "/openImages.groovy" );
+    write( commands, file = tmp_groovy_script) ;
+    
+    system_cmd = paste( fijiBinaryPath, '--run', paste0( '\"', tmp_groovy_script, '\"') );
+    
+    # print groovy commands for user info and debugging
+    cat( commands )
     
     # print command for user info and debugging
-    print( cmd )
+    cat( system_cmd )
     
     # Evoke Fiji with the expression compiled above
-    system( cmd )
-    
+    system( system_cmd )
 }
 
 # Generate coordinates for heatmap
@@ -312,7 +336,6 @@ makeHeatmapDataFrame <- function(df, WellX, WellY, PosX, PosY, subposjitter = 0.
   
     df
 }
-
 
 
 

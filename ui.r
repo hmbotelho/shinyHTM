@@ -61,10 +61,10 @@ shinyUI(navbarPage("shinyHTM",
         plotlyOutput("plot"),
         hr(),
         
-        
         fluidRow(
             
             column(2,
+                actionButton("plotScatterBoxOrHeatmap", "Update plot", icon = icon("paper-plane-o")),
                 selectInput("plotType", label = "Plot Type", choices = c("Scatter plot", "Boxplot", "Heatmap"))
             ),
             

@@ -39,8 +39,6 @@ col_QC <- "HTM_QC"
 
 shinyServer(function(input, output){
 
-    
-
     # File Input
     observeEvent(input$file1, {
         htm <- read.HTMtable(input$file1$datapath)
@@ -48,8 +46,6 @@ shinyServer(function(input, output){
         htm <<- htm
     })
 
-    
-    
     # Settings
     output$UIcolNameTreatment <- renderUI({
         input$file1
@@ -417,17 +413,21 @@ shinyServer(function(input, output){
           print(s)
           i = s[["pointNumber"]] + 1
           
-          openTheseImgChannels <- input$images2display
-          
+        
           tempPathInTable    <- gsub("\\\\", "/", input$pathInTable)
           tempPathInComputer <- gsub("\\\\", "/", input$pathInComputer)
-          tempFullPathName <- paste0(htm[i, paste0(input$prefixPath, input$images2display)], "/", htm[i, paste0(input$prefixFile, input$images2display)])
-          tempFullPathName <- gsub("\\\\", "/", tempFullPathName)
-          FullPathFile <- sub(tempPathInTable, tempPathInComputer, tempFullPathName, ignore.case = TRUE)
-
-          print(paste0("Launching Fiji: ",input$fiji_binary))
-          print(FullPathFile)
-          OpenInFiji( FullPathFile, input$fiji_binary )
+          
+          directories <- htm[i, paste0(input$prefixPath, input$images2display)]
+          directories <- gsub("\\\\", "/", directories)
+          directories <- sub( tempPathInTable, tempPathInComputer, directories, ignore.case = TRUE)
+          
+          filenames <- htm[i, paste0(input$prefixFile, input$images2display)]
+          
+          print( paste0( "Launching Fiji: ",input$fiji_binary ) )
+          print( directories )
+          print( filenames )
+          
+          OpenInFiji( directories, filenames, input$fiji_binary )
         }
     })
 
