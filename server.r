@@ -178,11 +178,18 @@ shinyServer(function(input, output){
 
     # Plot
     output$plot <- renderPlotly({
-        switch(input$plotType,
-               "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy, filterByColumn = input$PointplotfilterColumn, whichValues = input$PointplotfilterValues),
-               "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy),
-               "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2])
+        
+        # Take dependency on clicking the "Update plot" button
+        input$plotScatterBoxOrHeatmap
+        
+        isolate(
+            switch(input$plotType,
+                   "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy, filterByColumn = input$PointplotfilterColumn, whichValues = input$PointplotfilterValues),
+                   "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy),
+                   "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2])
+            )
         )
+        
     })
 
     
