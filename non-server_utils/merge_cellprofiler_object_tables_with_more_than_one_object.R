@@ -25,12 +25,13 @@ library(plyr)
 for (input.File in input.Files){
     cat ('Processing file: ')
     cat (input.File,'\n')
-    Rep.Data.Headers<-read.csv( file.path(inputPath,input.File), header=F, as.is = T, nrows = 2)
-    Rep.Data.Headers[1,]<-gsub( 'Image', '', Rep.Data.Headers[1,], perl = TRUE)
-    Rep.Data.Headers[3,]<-paste( Rep.Data.Headers[1,], Rep.Data.Headers[2,], sep='.')
+    
+    Rep.Data.Headers <- read.csv( file.path( inputPath, input.File ), header=F, as.is = T, nrows = 2)
+    Rep.Data.Headers[1,] <- gsub( 'Image', '', Rep.Data.Headers[1,], perl = TRUE)
+    Rep.Data.Headers[3,] <- paste( Rep.Data.Headers[1,], Rep.Data.Headers[2,], sep='.')
     
     Rep.Data <- read.csv( file.path( inputPath, input.File ), header = F, as.is = T, skip = 2)
-    names( Rep.Data ) <- Rep.Data.Headers[3,]
+    names( Rep.Data ) <- Rep.Data.Headers[ 3, ]
     
     Rep.Data$FileName_DatasetTable<-basename(input.File)
     dataset.Subfolder <- dirname(input.File)
@@ -43,7 +44,7 @@ for (input.File in input.Files){
                                     + attr( Rep.Match, 'capture.length' )[,groupName]
                                     - 1)
     }
-    Merged.Data<-rbind.fill(Merged.Data,Rep.Data)
+    Merged.Data <- rbind.fill( Merged.Data, Rep.Data )
 }
 
 # Save output table
