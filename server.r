@@ -98,7 +98,15 @@ shinyServer(function(input, output){
     # Plot settings
     output$UIselectBatch <- renderUI({
         input$file1
-        selectInput("batch", "Show this batch:", as.list(c("All batches",unique(htm[[input$colBatch]]))))
+        input$plotType
+        if( input$plotType == "Heatmap" )
+        {
+          selectInput("batch", "Show this batch:", as.list( c( unique( htm[[input$colBatch]] ) ) ) ) 
+        }
+        else
+        {
+          selectInput("batch", "Show this batch:", as.list( c( "All batches", unique(htm[[input$colBatch]] ) ) ) )
+        }
     })
     
     observeEvent(input$plotType,{
@@ -119,6 +127,8 @@ shinyServer(function(input, output){
                 output$UIBoxplotsplitBy <- renderUI(NULL)
                 
                 output$UILUTminmax <- renderUI(NULL)
+                
+                output$UILUTcolors <- renderUI(NULL)
             },
             "Boxplot"      = {
                 output$UIselectXaxis <- renderUI(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%"))
@@ -134,6 +144,7 @@ shinyServer(function(input, output){
                 output$UIBoxplotsplitBy <- renderUI(selectInput("BoxplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
                 
                 output$UILUTminmax <- renderUI(NULL)
+                output$UILUTcolors <- renderUI(NULL)
             },
             "Heatmap"      = {
                 output$UIselectXaxis <- renderUI(NULL)
@@ -148,18 +159,21 @@ shinyServer(function(input, output){
                 output$UIBoxplothighlightCenter <- renderUI(NULL)
                 output$UIBoxplotsplitBy         <- renderUI(NULL)
                 
+                output$UILUTcolors <- renderUI( selectInput("LUTcolors", "LUT colors", choices = c("Red-White-Green", "Blue-White-Red"), width = "100%"))
+         
                 output$UILUTminmax <- renderUI({
                     Ymin <- min(htm[[input$Yaxis]], na.rm = TRUE)
                     Ymax <- max(htm[[input$Yaxis]], na.rm = TRUE)
                     sliderInput("LUTminmax", "LUT adjustment", min = Ymin, max = Ymax, value = c(Ymin, Ymax), width = "100%")
                 })
+                
             }
         )
     })
     
     htmHM <- reactive({
 
-        if(input$batch == "All batches") return(NULL)
+        if(input$batch == "All batches") return( NULL )
 
         makeHeatmapDataFrame(df           = htm, 
                              WellX        = input$wells_X,
@@ -186,7 +200,7 @@ shinyServer(function(input, output){
             switch(input$plotType,
                    "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy, filterByColumn = input$PointplotfilterColumn, whichValues = input$PointplotfilterValues),
                    "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy),
-                   "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2])
+                   "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2], lutColors = input$LUTcolors)
             )
         )
         

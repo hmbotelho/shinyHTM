@@ -14,14 +14,19 @@ library(plyr)
 
 input.Directory <- '/Volumes/almfscreen/Gbekor/ATAT1--analysed/tables'
 input.FileNamesContain <- 'objects' 
-mergeTables( input.Directory = input.Directory, input.FileNamesContain = input.FileNamesContain )
+object.table <- concatenateTables( input.Directory = input.Directory, input.FileNamesContain = input.FileNamesContain )
 
+input.FileNamesContain <- 'image' 
+image.table <- concatenateTables( input.Directory = input.Directory, input.FileNamesContain = input.FileNamesContain )
+
+
+merged.table <- mergeImageAndObjectTables( input.Directory, image.table, object.table )
 
 #
 # Code (normally, do not touch)
 #
 
-mergeTables <- function( input.Directory, input.FileNamesContain ) {
+concatenateTables <- function( input.Directory, input.FileNamesContain ) {
 
   input.Pattern = paste0( "*", input.FileNamesContain, "*" )
   
@@ -50,9 +55,27 @@ mergeTables <- function( input.Directory, input.FileNamesContain ) {
   }
   
   # Save output table
-  output.FileName = paste0( "merged_", input.FileNamesContain, ".csv" )
+  output.FileName = paste0( "concatenated_", input.FileNamesContain, ".csv" )
   write.csv( Merged.Data, file = file.path( input.Directory, output.FileName ), row.names = FALSE, quote = FALSE )
   
   cat ('Done!','\n')
+  
+  Merged.Data
+
+}
+
+
+mergeImageAndObjectTables <- function( input.Directory, image.table, object.table )
+{
+  
+  merged.table <-  merge( image.table, object.table )
+
+  # Save output table
+  output.FileName = paste0( "merged_images_and_objects.csv" )
+  write.csv( merged.table, file = file.path( input.Directory, output.FileName ), row.names = FALSE, quote = FALSE )
+  
+  cat ('Done!','\n')
+  
+  merged.table
 
 }

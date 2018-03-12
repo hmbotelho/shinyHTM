@@ -163,12 +163,19 @@ boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highl
 }
 
 # Generate Plotly heatmap
-heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf){
+heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf, lutColors = "Blue-White-Red"){
 
     # Initialize variables
     plotSymbols <- c(approved = 15, rejected = 4)
-    colorGrad   <- c("red2", "white", "green4")
-
+    
+    if ( lutColors == "Blue-White-Red" )
+    {
+      colorGrad   <- c("blue", "white", "red")
+    }
+    else if ( lutColors == "Red-White-Green" )
+    {
+      colorGrad   <- c("red2", "white", "green4")
+    }
   
     # Column 'LUT' has numeric values which are solely used for the color lookup table
     df$LUT <- sapply(df[[measurement]], function(f){
@@ -213,7 +220,7 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     num_images = length( directories );  
   
     import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\")";
-    open_image_template = "open(\"DIRECTORY/FILENAME\")";
+    open_image_template = "IJ.open(\"DIRECTORY/FILENAME\")";
 
     # Generate the expression opening each image
     commands <- "import ij.IJ;\n"
@@ -236,7 +243,7 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
       else
       {
         open_image = sub( "DIRECTORY", directories[ i ], open_image_template, fixed = TRUE )
-        open_image = sub( "DIRECTORY", filenames[ i ], open_image, fixed = TRUE )
+        open_image = sub( "FILENAME", filenames[ i ], open_image, fixed = TRUE )
         commands <- paste0( commands, open_image, "\n" );
       }
     }
