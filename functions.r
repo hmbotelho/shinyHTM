@@ -63,8 +63,8 @@ read.HTMtable <- function(filepath){
 
 
 # Generate Plotly scatter/jitter plot
-pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", filterByColumn = "None", whichValues = "All"){
-
+pointPlot <- function( df, batch_col, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", filterByColumn = "None", whichValues = "All", colTreatment, colBatch ){
+  
     # Initialize variables
     plotSymbols <- c( approved = 20, rejected = 4 )
     
@@ -85,20 +85,23 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, spl
             df <- df[OKrows,]
         }
     }    
-
+    
+    # Hide rejected data points if requested
+    if( highlightQCfailed == "Don't show" )
+    {
+      df <- df[df[[col_QC]],]
+    }
 
     # Define the data to be plotted
     g <- ggplot(df, aes_string(x, y)) + ggtitle(batch) + scale_colour_gradient2()
 
     # Assign symbol to be used at each data point
-    symbols <- if( highlightQCfailed )
+    symbols <- if( highlightQCfailed == "Show as cross" )
     {
       sapply( df[[col_QC]], function(x) ifelse( x, plotSymbols["approved"], plotSymbols["rejected"] ) )
     } 
     else
     {
-      # Do not show failed data points at all
-      df <- df[ df[[col_QC]] , ]
       plotSymbols["approved"]
     }
 
@@ -107,18 +110,19 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, spl
     # TODO: only jitter along non-numeric
     g <- if( is.numeric( df[[x]] ) & is.numeric( df[[y]] ) )
     {
-        g + geom_point( shape = symbols )
+        g + geom_point( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
+      
     } 
     else
     {
-        g + geom_jitter( shape = symbols )
+        g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
     }
 
     # Customize plot
     if(splitBy != "None"){
         g <- g + 
             facet_grid( as.formula(paste("~", splitBy)), scales = "free_x" ) + 
-            theme( strip.text.x = element_text(angle = 90) )
+            theme( strip.text.x = element_text( angle = 90 ) )
     }
 
     # Output finished plot
@@ -126,19 +130,18 @@ pointPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, spl
 }
 
 # Generate Plotly boxplot
-boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highlightCenter = "No", splitBy = "None"){
+boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highlightCenter = "No", splitBy = "None", colTreatment, colBatch ){
 
     # Subset batches
     if(batch != "All batches"){
         df <- df[df[[batch_col]] == batch,]
     }
     
-    
     # Hide rejected data points if requested
-    if(highlightQCfailed){
+    if( highlightQCfailed == "Don't show" )
+    {
         df <- df[df[[col_QC]],]
     }
-
 
     # Make plot
     g <- ggplot(df, aes_string(x, y))
@@ -163,7 +166,7 @@ boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highl
 }
 
 # Generate Plotly heatmap
-heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf, lutColors = "Blue-White-Red"){
+heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf, lutColors = "Blue-White-Red", colTreatment, colBatch ){
 
     # Initialize variables
     plotSymbols <- c(approved = 15, rejected = 4)
@@ -185,16 +188,27 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
         f
     })
 
-
-    # Define the data to be plotted
-    g <- ggplot(df, aes(heatX, heatY, color = LUT))
+    if( highlightQCfailed == "Don't show" )
+    {
+      df <- df[df[[col_QC]],]
+    }
     
+    
+    # Define the data to be plotted
+    g <- ggplot( df, 
+                 aes( heatX, heatY, color = LUT, 
+                      text = sprintf("%s: %s<br>Treatment: %s<br>Batch: %s", measurement, df[[measurement]], df[[colTreatment]], df[[colBatch]])
+                     ) 
+                 )
     
     # Calculate the symbol to be used at each data point
-    symbols <- if(highlightQCfailed){
-        sapply(df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
-    } else{
-        plotSymbols["approved"]
+    symbols <- if( highlightQCfailed == "Show as cross")
+    {
+      sapply( df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
+    } 
+    else
+    {
+      plotSymbols["approved"]
     }
     
     
@@ -209,13 +223,14 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
     
     
     # Output finished plot
-    ggplotly(g)
+    ggplotly( g )
 }
 
 
 # Can open multiple files at once
 # filePath is an array of character strings
-OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe" ){
+OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe" )
+  {
     
     num_images = length( directories );  
   

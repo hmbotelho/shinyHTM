@@ -117,7 +117,7 @@ shinyServer(function(input, output){
                 output$UIselectXaxis <- renderUI(selectInput("Xaxis", "X axis:", choices = as.list(names(htm)), width = "200%"))
                 output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Y axis:", choices = as.list(names(htm)), width = "200%"))
                 
-                output$UIhighlightQCfailed     <- renderUI(checkboxInput("highlightQCfailed", "Highlight data points that did not pass QC", value = FALSE))
+                output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross")))
                 
                 output$UIPointplotsplitBy      <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
                 output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = as.list(c("None", names(htm))), width = "100%"))
@@ -134,7 +134,7 @@ shinyServer(function(input, output){
                 output$UIselectXaxis <- renderUI(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%"))
                 output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
                 
-                output$UIhighlightQCfailed <- renderUI(checkboxInput("highlightQCfailed", "Hide data points that did not pass QC", value = FALSE))
+                output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show as cross")))
                 
                 output$UIPointplotsplitBy      <- renderUI(NULL)
                 output$UIPointplotfilterColumn <- renderUI(NULL)
@@ -150,7 +150,7 @@ shinyServer(function(input, output){
                 output$UIselectXaxis <- renderUI(NULL)
                 output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
                 
-                output$UIhighlightQCfailed <- renderUI(checkboxInput("highlightQCfailed", "Show data points that did not pass QC", value = FALSE))
+                output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross")))
                 
                 output$UIPointplotsplitBy       <- renderUI(NULL)
                 output$UIPointplotfilterColumn  <- renderUI(NULL)
@@ -195,12 +195,12 @@ shinyServer(function(input, output){
         
         # Take dependency on clicking the "Update plot" button
         input$plotScatterBoxOrHeatmap
-        
+      
         isolate(
             switch(input$plotType,
-                   "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy, filterByColumn = input$PointplotfilterColumn, whichValues = input$PointplotfilterValues),
-                   "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy),
-                   "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2], lutColors = input$LUTcolors)
+                   "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy, filterByColumn = input$PointplotfilterColumn, whichValues = input$PointplotfilterValues, input$colTreatment, input$colBatch ),
+                   "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy, input$colTreatment, input$colBatch ),
+                   "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2], lutColors = input$LUTcolors, input$colTreatment, input$colBatch )
             )
         )
         
@@ -212,7 +212,6 @@ shinyServer(function(input, output){
     approvedExperiments          <- reactive({
         input$QCAddfailedExperiments
         input$QCcheckGroup
-        
         unique(as.character(htm[[input$colBatch]]))[!(unique(as.character(htm[[input$colBatch]])) %in% as.character(QCsettings[QCsettings$type == "Failed experiment","minimum"]))]
     })
     
