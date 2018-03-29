@@ -1,4 +1,14 @@
 #
+# INPUT ( CHANGE HERE! )
+#
+
+input.Directory <- '/Volumes/almfscreen/Gbekor/ATAT1--analysed/tables'
+
+####################################
+# CODE, NORMALLY NO NEED TO CHANGE #
+####################################
+
+#
 # Init
 #
 
@@ -7,27 +17,12 @@ if ( ! require(plyr) ) install.packages('plyr')
 library(plyr)
 #if (!require(stringr)) install.packages('stringr')
 
-
 #
-# INPUT ( CHANGE HERE! )
-#
-
-input.Directory <- '/Volumes/almfscreen/Gbekor/ATAT1--analysed/tables'
-input.FileNamesContain <- 'objects' 
-object.table <- concatenateTables( input.Directory = input.Directory, input.FileNamesContain = input.FileNamesContain )
-
-input.FileNamesContain <- 'image' 
-image.table <- concatenateTables( input.Directory = input.Directory, input.FileNamesContain = input.FileNamesContain )
-
-
-merged.table <- mergeImageAndObjectTables( input.Directory, image.table, object.table )
-
-#
-# Code (normally, do not touch)
+# FUNCTIONS
 #
 
 concatenateTables <- function( input.Directory, input.FileNamesContain ) {
-
+  
   input.Pattern = paste0( "*", input.FileNamesContain, "*" )
   
   cat ('Looking for tables in directory: ', input.Directory, '\n')
@@ -43,7 +38,7 @@ concatenateTables <- function( input.Directory, input.FileNamesContain ) {
   #library(stringr)
   
   for ( input.File in input.Files ) {
-  
+    
     if ( ! ("merged" %in% input.File ) )
     {
       cat ( 'Processing file: ' )
@@ -55,13 +50,13 @@ concatenateTables <- function( input.Directory, input.FileNamesContain ) {
   }
   
   # Save output table
-  output.FileName = paste0( "concatenated_", input.FileNamesContain, ".csv" )
+  output.FileName = paste0( "merged_", input.FileNamesContain, ".csv" )
   write.csv( Merged.Data, file = file.path( input.Directory, output.FileName ), row.names = FALSE, quote = FALSE )
   
   cat ('Done!','\n')
   
   Merged.Data
-
+  
 }
 
 
@@ -69,7 +64,7 @@ mergeImageAndObjectTables <- function( input.Directory, image.table, object.tabl
 {
   
   merged.table <-  merge( image.table, object.table )
-
+  
   # Save output table
   output.FileName = paste0( "merged_images_and_objects.csv" )
   write.csv( merged.table, file = file.path( input.Directory, output.FileName ), row.names = FALSE, quote = FALSE )
@@ -77,5 +72,18 @@ mergeImageAndObjectTables <- function( input.Directory, image.table, object.tabl
   cat ('Done!','\n')
   
   merged.table
-
+  
 }
+
+#
+# MAIN
+#
+
+input.FileNamesContain <- 'objects' 
+object.table <- concatenateTables( input.Directory = input.Directory, input.FileNamesContain = input.FileNamesContain )
+
+input.FileNamesContain <- 'image' 
+image.table <- concatenateTables( input.Directory = input.Directory, input.FileNamesContain = input.FileNamesContain )
+
+merged.table <- mergeImageAndObjectTables( input.Directory, image.table, object.table )
+

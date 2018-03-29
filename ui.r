@@ -19,7 +19,6 @@ shinyUI(navbarPage("shinyHTM",
 
     
     
-    
     tabPanel("2. Configure settings",
         h2("Settings"),
         h3("Select column names containing..."),
@@ -40,6 +39,9 @@ shinyUI(navbarPage("shinyHTM",
         textInput("pathInComputer", "Image root folder name in this computer", "c:\\myplate_01", width = "100%"),
         textInput("prefixPath", "Prefix: column with folder name", "PathName_"),
         textInput("prefixFile", "Prefix: column with file name", "FileName_"),
+        uiOutput("UIcolNameObjectPosX"),
+        uiOutput("UIcolNameObjectPosY"),
+        uiOutput("UIcolNameObjectPosZ"),
         hr(),
         
         h3("Heatmap settings"),
@@ -49,6 +51,7 @@ shinyUI(navbarPage("shinyHTM",
         numericInput("npos_X", "Number of subposition Columns", 2),
         sliderInput("squaredodge", "Separation between positions", min=0, max=0.5, value=0.2, step=0.1),
         sliderInput("squaresize", "Square size", min=0.5, max=5, value=1, step=0.5)
+        
     ),
 
 

@@ -1,28 +1,23 @@
 install.packages(c("shiny", "plotly","shinyjs","xlsx"))
 library(shiny)#
 runGitHub("shinyHTM", "hmbotelho")
-getw()
-getwd()
+library(shiny)#
+runGitHub("shinyHTM", "hmbotelho")
+library(shiny)#
+runGitHub("shinyHTM", "hmbotelho")
 setwd("/Users/tischer/Documents/shinyHTM/")
-library( shiny )
+runApp()
+runApp()
+source('~/Documents/HTM_Explorer/run.R', chdir = TRUE)
+head( htm@data$Metadata_posNum )
+htm@data$Metadata_posNum[1:10]
+htm@data$Metadata_posNum[1:100]
+htm@data$Metadata_posNum[1:1000]
+htm@data$Metadata_posNum <- htm@data$Metadata_posNum + 1
+runApp()
+source('~/Documents/HTM_Explorer/run.R', chdir = TRUE)
 runApp()
 runApp()
 runApp()
-runApp()
-?selectInput
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-runApp()
-?ggplotly
-runApp()
-runApp()
+source('~/Documents/HTM_Explorer/run.R', chdir = TRUE)
+htm@data$Metadata_posNum <- htm@data$Metadata_posNum + 1

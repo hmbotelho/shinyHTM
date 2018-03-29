@@ -68,15 +68,14 @@ pointPlot <- function( df, batch_col, batch, x, y, col_QC, highlightQCfailed, sp
     # Initialize variables
     plotSymbols <- c( approved = 20, rejected = 4 )
     
-    
     # Subset batches
-    if(batch != "All batches"){
+    
+    if( batch != "All batches" ){
         df <- df[ df[[batch_col]] == batch, ]
     }
 
-
     # Subset by columns
-    if(filterByColumn != "None"){
+    if( filterByColumn != "None" ){
         if(!("All" %in% whichValues) & !is.null(whichValues)){
             OKrows <- sapply( df[[filterByColumn]], function(x)
             {
@@ -229,9 +228,8 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
 
 # Can open multiple files at once
 # filePath is an array of character strings
-OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe" )
+OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe", x, y, z )
   {
-    
     num_images = length( directories );  
   
     import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\")";
@@ -239,12 +237,11 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
 
     # Generate the expression opening each image
     commands <- "import ij.IJ;\n"
-  
+    
     for ( i in seq(1, num_images) )
     {
       if( grepl("\\?", filenames[ i ] ) )
       {
-        
         # directory
         import_image_sequence_reg_exp <- sub( "DIRECTORY", directories[ i ], import_image_sequence_reg_exp_template, fixed = TRUE )
         
@@ -253,7 +250,6 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
         import_image_sequence_reg_exp <- sub( "REGEXP", reg_exp, import_image_sequence_reg_exp, fixed = TRUE )
         
         commands <- paste0( commands, import_image_sequence_reg_exp, "\n" );
-      
       }
       else
       {

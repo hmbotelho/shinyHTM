@@ -72,6 +72,28 @@ shinyServer(function(input, output){
         selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), width = "100%")
     })
     
+    output$UIcolNameObjectPosX       <- renderUI({
+      input$file1
+      input$applyNorm
+      
+      selectInput("colObjectPosX", "Object's x-position:", as.list( c("NA", names(htm))), width = "100%")
+    })
+    
+    output$UIcolNameObjectPosY       <- renderUI({
+      input$file1
+      input$applyNorm
+      
+      selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), width = "100%")
+    })
+    
+    output$UIcolNameObjectPosZ       <- renderUI({
+      input$file1
+      input$applyNorm
+      
+      selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), width = "100%")
+    })
+    
+    
     output$UIfiji_path        <- renderUI({
         
         if (Sys.info()['sysname'] == "Windows")
@@ -99,13 +121,18 @@ shinyServer(function(input, output){
     output$UIselectBatch <- renderUI({
         input$file1
         input$plotType
-        if( input$plotType == "Heatmap" )
+        
+        if( is.null( input$colBatch ) )
+        {
+          selectInput("batch", "Show this batch:", as.list( c( "All batches" ) ) )
+        }
+        else if( input$plotType == "Heatmap" )
         {
           selectInput("batch", "Show this batch:", as.list( c( unique( htm[[input$colBatch]] ) ) ) ) 
         }
         else
         {
-          selectInput("batch", "Show this batch:", as.list( c( "All batches", unique(htm[[input$colBatch]] ) ) ) )
+          selectInput("batch", "Show this batch:", as.list( c( "All batches", unique( htm[[input$colBatch]] ) ) ) )
         }
     })
     
@@ -121,8 +148,16 @@ shinyServer(function(input, output){
                 
                 output$UIPointplotsplitBy      <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
                 output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = as.list(c("None", names(htm))), width = "100%"))
-                output$UIPointplotfilterValues <- renderUI(selectInput("PointplotfilterValues", "Matches:", choices = as.list(c("All", htm[[input$PointplotfilterColumn]])), width = "100%", multiple = TRUE))
-                
+                output$UIPointplotfilterValues <- renderUI(
+                  if ( is.null( input$PointplotfilterColumn ) )
+                  {
+                    selectInput("PointplotfilterValues", "Matches:", choices = as.list(c("All")) , width = "100%", multiple = TRUE)
+                  }
+                  else
+                  {
+                    selectInput("PointplotfilterValues", "Matches:", choices = as.list(c("All", htm[[input$PointplotfilterColumn]])), width = "100%", multiple = TRUE)
+                  }
+                  )
                 output$UIBoxplothighlightCenter <- renderUI(NULL)
                 output$UIBoxplotsplitBy <- renderUI(NULL)
                 
@@ -173,7 +208,7 @@ shinyServer(function(input, output){
     
     htmHM <- reactive({
 
-        if(input$batch == "All batches") return( NULL )
+        if( input$batch == "All batches" ) return( NULL )
 
         makeHeatmapDataFrame(df           = htm, 
                              WellX        = input$wells_X,
@@ -195,15 +230,22 @@ shinyServer(function(input, output){
         
         # Take dependency on clicking the "Update plot" button
         input$plotScatterBoxOrHeatmap
-      
+        
         isolate(
-            switch(input$plotType,
+            if( ! is.null( input$batch ) )
+            {
+                switch(input$plotType,
                    "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy, filterByColumn = input$PointplotfilterColumn, whichValues = input$PointplotfilterValues, input$colTreatment, input$colBatch ),
                    "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy, input$colTreatment, input$colBatch ),
                    "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2], lutColors = input$LUTcolors, input$colTreatment, input$colBatch )
-            )
-        )
-        
+                )
+            }
+            else
+            {
+              ggplotly( ggplot() ) 
+            }
+         )
+      
     })
 
     
@@ -422,18 +464,25 @@ shinyServer(function(input, output){
     
     # Plot-Fiji interaction
     output$selection <- renderPrint({
+        
         s <- event_data("plotly_click")
+        
         if (length(s) == 0) 
         {
           "Click on a data point to open images!"
         } 
         else 
         {
+          
+          if ( length( input$images2display ) == 0 )
+          {
+            return("There are no images for viewing selected.");
+          }
+          
           print("You selected:")
           print(s)
           i = s[["pointNumber"]] + 1
           
-        
           tempPathInTable    <- gsub("\\\\", "/", input$pathInTable)
           tempPathInComputer <- gsub("\\\\", "/", input$pathInComputer)
           
@@ -441,13 +490,20 @@ shinyServer(function(input, output){
           directories <- gsub("\\\\", "/", directories)
           directories <- sub( tempPathInTable, tempPathInComputer, directories, ignore.case = TRUE)
           
-          filenames <- htm[i, paste0(input$prefixFile, input$images2display)]
+          filenames <- htm[i, paste0( input$prefixFile, input$images2display )]
           
-          print( paste0( "Launching Fiji: ",input$fiji_binary ) )
+          print( paste0( "Launching Fiji: ", input$fiji_binary ) )
           print( directories )
           print( filenames )
           
-          OpenInFiji( directories, filenames, input$fiji_binary )
+          x <- "NA"; y <- "NA"; z <- "NA";
+          if ( input$colObjectPosX != "NA ") { x <- htm[i, input$colObjectPosX] }
+          if ( input$colObjectPosY != "NA ") { y <- htm[i, input$colObjectPosY] }
+          if ( input$colObjectPosZ != "NA ") { z <- htm[i, input$colObjectPosZ] }
+          
+          print( paste( "Object position: ", x, y, z ) )
+          
+          OpenInFiji( directories, filenames, input$fiji_binary, x, y, z )
         }
     })
 
@@ -630,6 +686,11 @@ shinyServer(function(input, output){
                                 colWell             = isolate(input$colWell), 
                                 colPos              = isolate(input$colPos), 
                                 
+                                colObjectPosX       = isolate(input$colObjectPosX), 
+                                colObjectPosY       = isolate(input$colObjectPosY), 
+                                colObjectPosZ       = isolate(input$colObjectPosZ), 
+                                
+                                
                                 fiji_binary         = isolate(input$fiji_binary), 
                                 images2display      = isolate(input$images2display), 
                                 
@@ -690,6 +751,17 @@ shinyServer(function(input, output){
             output$UIcolNamePos       <- renderUI({
                 selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), width = "100%", selected = HTMsettings[["colPos"]])
             })
+            
+            output$UIcolNameObjectPosX     <- renderUI({
+              selectInput("colObjectPosX", "Object's x-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosX"]])
+            })
+            output$UIcolNameObjectPosX     <- renderUI({
+              selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosY"]])
+            })
+            output$UIcolNameObjectPosX     <- renderUI({
+              selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosZ"]])
+            })
+            
             echo("     done")
             
             
