@@ -237,6 +237,9 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
 
     # Generate the expression opening each image
     commands <- "import ij.IJ;\n"
+    commands <- paste0( commands, "import ij.gui.OvalRoi", "\n" );
+    
+    
     
     for ( i in seq(1, num_images) )
     {
@@ -255,12 +258,31 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
       {
         open_image = sub( "DIRECTORY", directories[ i ], open_image_template, fixed = TRUE )
         open_image = sub( "FILENAME", filenames[ i ], open_image, fixed = TRUE )
-        commands <- paste0( commands, open_image, "\n" );
+        commands <- paste0( commands, open_image, "\n" )
       }
     }
-
     
+    #
+    # highlight object 
+    #
+    
+    if ( z != "NA" )
+    { 
+      setSlice = paste0( "IJ.getImage().setSlice(" , round( z ) , ")" )
+      commands <- paste0( commands, setSlice, "\n" );
+    }
+
+    if ( ( x != "NA" ) && ( y != "NA" ) )
+    { 
+      diameter = 50;
+      setRoi = paste0( "IJ.getImage().setRoi( new OvalRoi(",x,",",y,",",diameter,",",diameter,") )");
+      commands <- paste0( commands, setRoi, "\n" );
+    }
+    
+    #
     # write commands to groovy script    
+    #
+    
     tmp_directory = paste0( getwd(), "/tmp" ) 
     dir.create( tmp_directory, showWarnings = FALSE )
     tmp_groovy_script = paste0( tmp_directory, "/openImages.groovy" );

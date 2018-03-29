@@ -656,14 +656,14 @@ shinyServer(function(input, output){
             
             echo("Dialog box: Where is the image table file?")
             echo("")
-            pathImageTable <- choose.files(caption = "Select the image table file",
-                                           multi = FALSE, filters = Filters["All",])
+            pathImageTable <- choose.files( caption = "Select the image table file",
+                                            multi = FALSE, filters = Filters["All",] )
             echo("Saving analysis session of image table '", pathImageTable, "'")
             echo("")
             
             echo("Dialog box: Where shall the session file be saved?")
             echo("")
-            targetpath <- tclvalue(tkgetSaveFile(initialfile = "settings.r"))
+            targetpath <- tclvalue( tkgetSaveFile(initialfile = "settings.r") )
             
             echo("Saving all shinyHTM settings.")
             echo("Please keep the original image table at the same location.")
