@@ -56,43 +56,48 @@ read.HTMtable <- function(filepath){
     #              return(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE))
     #          }
     # )
-    return(read.csv(filepath, sep = ",", stringsAsFactors = FALSE))
+    return( read.csv(filepath, sep = ",", stringsAsFactors = FALSE) )
+}
+
+filterDataFrame <- function( df, batch_col, batch, highlightQCfailed, filterByColumn, whichValues, col_QC )
+{
+  # Subset batches
+  if( ! is.null( batch_col ) ) {
+    if ( batch != "All batches" ) {
+      df <- df[ df[[batch_col]] == batch, ]
+    }
+  }
+
+  # Subset by columns
+  if( filterByColumn != "None" ) {
+    if( !("All" %in% whichValues) & !is.null( whichValues ) ) {
+      OKrows <- sapply( df[[ filterByColumn ]], function(x)
+      {
+        x %in% whichValues
+      })
+      df <- df[OKrows,]
+    }
+  }    
+  
+  # Hide rejected data points if requested
+  if( highlightQCfailed == "Don't show" )
+  {
+    df <- df[df[[col_QC]],]
+  }
+  
+  return(df)
+  
 }
 
 
-
-
 # Generate Plotly scatter/jitter plot
-pointPlot <- function( df, batch_col, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", filterByColumn = "None", whichValues = "All", colTreatment, colBatch ){
+pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", colTreatment, colBatch ){
   
     # Initialize variables
     plotSymbols <- c( approved = 20, rejected = 4 )
-    
-    # Subset batches
-    
-    if( batch != "All batches" ){
-        df <- df[ df[[batch_col]] == batch, ]
-    }
-
-    # Subset by columns
-    if( filterByColumn != "None" ){
-        if(!("All" %in% whichValues) & !is.null(whichValues)){
-            OKrows <- sapply( df[[filterByColumn]], function(x)
-            {
-                x %in% whichValues
-            })
-            df <- df[OKrows,]
-        }
-    }    
-    
-    # Hide rejected data points if requested
-    if( highlightQCfailed == "Don't show" )
-    {
-      df <- df[df[[col_QC]],]
-    }
-
+  
     # Define the data to be plotted
-    g <- ggplot(df, aes_string(x, y)) + ggtitle(batch) + scale_colour_gradient2()
+    g <- ggplot(df, aes_string(x, y)) + ggtitle( batch ) + scale_colour_gradient2()
 
     # Assign symbol to be used at each data point
     symbols <- if( highlightQCfailed == "Show as cross" )
@@ -129,22 +134,11 @@ pointPlot <- function( df, batch_col, batch, x, y, col_QC, highlightQCfailed, sp
 }
 
 # Generate Plotly boxplot
-boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highlightCenter = "No", splitBy = "None", colTreatment, colBatch ){
-
-    # Subset batches
-    if(batch != "All batches"){
-        df <- df[df[[batch_col]] == batch,]
-    }
-    
-    # Hide rejected data points if requested
-    if( highlightQCfailed == "Don't show" )
-    {
-        df <- df[df[[col_QC]],]
-    }
+boxPlot <- function(df, batch, x, y, col_QC, highlightCenter = "No", splitBy = "None", colTreatment, colBatch  ){
 
     # Make plot
     g <- ggplot(df, aes_string(x, y))
-    g <- g + geom_boxplot() + ggtitle(batch)
+    g <- g + geom_boxplot() + ggtitle( batch )
     
     # Customize plot
     if(highlightCenter != "No"){
@@ -155,7 +149,6 @@ boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highl
     }
     if(splitBy != "None"){
         g <- g + 
-
         facet_grid(as.formula(paste("~", splitBy)), scales = "free_x") + 
         theme(strip.text.x = element_text(angle = 90))
     }
@@ -165,7 +158,7 @@ boxPlot <- function(df, batch_col, batch, x, y, col_QC, highlightQCfailed, highl
 }
 
 # Generate Plotly heatmap
-heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf, lutColors = "Blue-White-Red", colTreatment, colBatch ){
+heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf, lutColors = "Blue-White-Red", colTreatment, colBatch ){
 
     # Initialize variables
     plotSymbols <- c(approved = 15, rejected = 4)
@@ -186,12 +179,6 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
         if(f >= colorMax) return(colorMax)
         f
     })
-
-    if( highlightQCfailed == "Don't show" )
-    {
-      df <- df[df[[col_QC]],]
-    }
-    
     
     # Define the data to be plotted
     g <- ggplot( df, 
@@ -223,8 +210,8 @@ heatmapPlot <- function(df, measurement, batch, nrows, ncolumns, symbolsize=1, c
     
     # Output finished plot
     ggplotly( g )
+    
 }
-
 
 # Can open multiple files at once
 # filePath is an array of character strings
@@ -238,8 +225,6 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     # Generate the expression opening each image
     commands <- "import ij.IJ;\n"
     commands <- paste0( commands, "import ij.gui.OvalRoi", "\n" );
-    
-    
     
     for ( i in seq(1, num_images) )
     {
@@ -266,13 +251,13 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     # highlight object 
     #
     
-    if ( z != "NA" )
+    if ( ! is.null( z ) &&  z != "NA" )
     { 
       setSlice = paste0( "IJ.getImage().setSlice(" , round( z ) , ")" )
       commands <- paste0( commands, setSlice, "\n" );
     }
 
-    if ( ( x != "NA" ) && ( y != "NA" ) )
+    if (! is.null( x ) && ! is.null( y ) && ( x != "NA" ) && ( y != "NA" ) )
     { 
       diameter = 50;
       setRoi = paste0( "IJ.getImage().setRoi( new OvalRoi(",x,",",y,",",diameter,",",diameter,") )");

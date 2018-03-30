@@ -1,5 +1,6 @@
 # ==========================================================================
-# Phylosophy: the 'htm' data.frame is placed in the global enviromnent, where it can be accessed and updated by reactive functions
+# Phylosophy: the 'htm' data.frame is placed in the global enviromnent, 
+# where it can be accessed and updated by reactive functions
 #
 # Heatmaps are built from a reactive data.frame 'htmHM()'
 #
@@ -206,11 +207,11 @@ shinyServer(function(input, output){
         )
     })
     
-    htmHM <- reactive({
+    htmHeatMap <- reactive({
 
         if( input$batch == "All batches" ) return( NULL )
 
-        makeHeatmapDataFrame(df           = htm, 
+        makeHeatmapDataFrame(df           = htmFiltered(), 
                              WellX        = input$wells_X,
                              WellY        = input$wells_Y,
                              PosX         = input$npos_X,
@@ -221,6 +222,19 @@ shinyServer(function(input, output){
                              col_Well     = input$colWell,
                              col_Pos      = input$colPos,
                              col_QC       = col_QC)
+    })
+    
+    
+    htmFiltered <- reactive({
+      
+      filterDataFrame( df = htm, 
+                       batch_col = input$colBatch, 
+                       batch = input$batch, 
+                       highlightQCfailed = input$highlightQCfailed, 
+                       filterByColumn = input$PointplotfilterColumn,  
+                       whichValues = input$PointplotfilterValues, 
+                       col_QC = col_QC)
+      
     })
 
 
@@ -234,11 +248,45 @@ shinyServer(function(input, output){
         isolate(
             if( ! is.null( input$batch ) )
             {
-                switch(input$plotType,
-                   "Scatter plot" = pointPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$PointplotsplitBy, filterByColumn = input$PointplotfilterColumn, whichValues = input$PointplotfilterValues, input$colTreatment, input$colBatch ),
-                   "Boxplot"      = boxPlot(htm, input$colBatch, input$batch, input$Xaxis, input$Yaxis, col_QC, input$highlightQCfailed, input$BoxplothighlightCenter, input$BoxplotsplitBy, input$colTreatment, input$colBatch ),
-                   "Heatmap"      = heatmapPlot(htmHM(), input$Yaxis, input$batch, input$wells_Y, input$wells_X, input$squaresize, col_QC, input$highlightQCfailed, colorMin = input$LUTminmax[1], colorMax = input$LUTminmax[2], lutColors = input$LUTcolors, input$colTreatment, input$colBatch )
-                )
+              switch(input$plotType,
+                 
+                     "Scatter plot" = pointPlot(
+                         df =  htmFiltered(), 
+                         batch = input$colBatch, 
+                         x = input$Xaxis, 
+                         y = input$Yaxis, 
+                         col_QC = col_QC, 
+                         highlightQCfailed = input$highlightQCfailed, 
+                         splitBy = input$PointplotsplitBy, 
+                         colTreatment = input$colTreatment, 
+                         colBatch = input$colBatch),
+                       
+                     "Boxplot"      = boxPlot(
+                         df =  htmFiltered(), 
+                         batch = input$colBatch, 
+                         x = input$Xaxis, 
+                         y = input$Yaxis, 
+                         col_QC = col_QC, 
+                         highlightCenter = input$BoxplothighlightCenter, 
+                         splitBy = input$PointplotsplitBy, 
+                         colTreatment = input$colTreatment, 
+                         colBatch = input$colBatch),
+                       
+                     "Heatmap"      = heatmapPlot( 
+                       df = htmHeatMap(), 
+                       measurement = input$Yaxis, 
+                       batch = input$batch,
+                       nrows = input$wells_Y, 
+                       ncolumns = input$wells_X, 
+                       symbolsize = input$squaresize, 
+                       col_QC =   col_QC, 
+                       highlightQCfailed = input$highlightQCfailed, 
+                       colorMin = input$LUTminmax[1], 
+                       colorMax = input$LUTminmax[2], 
+                       lutColors = input$LUTcolors, 
+                       colTreatment = input$colTreatment, 
+                       colBatch = input$colBatch )
+              )
             }
             else
             {
@@ -247,8 +295,6 @@ shinyServer(function(input, output){
          )
       
     })
-
-    
     
     # QC-specific settings
     approvedExperiments          <- reactive({
@@ -460,51 +506,54 @@ shinyServer(function(input, output){
         )
     })
     
-
     
     # Plot-Fiji interaction
-    output$selection <- renderPrint({
+    output$selection <- renderPrint( {
         
-        s <- event_data("plotly_click")
+        s <- event_data( "plotly_click" )
         
-        if (length(s) == 0) 
-        {
-          "Click on a data point to open images!"
-        } 
-        else 
-        {
+        isolate({
           
           if ( length( input$images2display ) == 0 )
           {
             return("There are no images for viewing selected.");
           }
           
-          print("You selected:")
-          print(s)
-          i = s[["pointNumber"]] + 1
+          print( "You selected:" )
+          print( s )
+          i = s[[ "pointNumber" ]] + 1
+          
+          # get the currently plotted dataframe, where the row numbers match the 
+          # numbers returned but the clicking observer
+          df <- htmFiltered()
           
           tempPathInTable    <- gsub("\\\\", "/", input$pathInTable)
           tempPathInComputer <- gsub("\\\\", "/", input$pathInComputer)
           
-          directories <- htm[i, paste0(input$prefixPath, input$images2display)]
+          directories <- df[i, paste0(input$prefixPath, input$images2display)]
           directories <- gsub("\\\\", "/", directories)
           directories <- sub( tempPathInTable, tempPathInComputer, directories, ignore.case = TRUE)
           
-          filenames <- htm[i, paste0( input$prefixFile, input$images2display )]
+          filenames <- df[i, paste0( input$prefixFile, input$images2display )]
           
           print( paste0( "Launching Fiji: ", input$fiji_binary ) )
           print( directories )
           print( filenames )
           
           x <- "NA"; y <- "NA"; z <- "NA";
-          if ( input$colObjectPosX != "NA ") { x <- htm[i, input$colObjectPosX] }
-          if ( input$colObjectPosY != "NA ") { y <- htm[i, input$colObjectPosY] }
-          if ( input$colObjectPosZ != "NA ") { z <- htm[i, input$colObjectPosZ] }
+          if ( input$colObjectPosX != "NA ") { x <- df[i, input$colObjectPosX] }
+          if ( input$colObjectPosY != "NA ") { y <- df[i, input$colObjectPosY] }
+          if ( input$colObjectPosZ != "NA ") { z <- df[i, input$colObjectPosZ] }
           
+          print( input$colObjectPosX )
+          print( input$colObjectPosY )
+          print( input$colObjectPosZ )
           print( paste( "Object position: ", x, y, z ) )
           
           OpenInFiji( directories, filenames, input$fiji_binary, x, y, z )
-        }
+          
+        }) # isolate
+    
     })
 
     
@@ -516,21 +565,25 @@ shinyServer(function(input, output){
         
         selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), width = "100%", multiple = FALSE)
     })
+    
     output$UINormDataTransform <- renderUI({
         input$file1
         
         selectInput("NormDataTransform", "Data transformation", choices = list("None selected", "log2"), width = "100%")
     })
+    
     output$UINormGradientCorr  <- renderUI({
         input$file1
         
         selectInput("NormGradientCorr", "Batch-wise spatial gradient correction", choices = list("None selected", "median polish", "median 7x7", "median 5x5", "median 3x3", "z-score 5x5"), width = "100%")
     })
+    
     output$UINormMethod        <- renderUI({
         input$file1
         
         selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "z-score (median subtraction)", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"), width = "100%")
     })
+    
     output$UINormNegCtrl       <- renderUI({
         input$file1
         
