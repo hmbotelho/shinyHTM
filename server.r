@@ -211,7 +211,7 @@ shinyServer(function(input, output){
 
         if( input$batch == "All batches" ) return( NULL )
 
-        makeHeatmapDataFrame(df           = htmFiltered(), 
+        makeHeatmapDataFrame(df           = htmFilteredForCurrentPlot(), 
                              WellX        = input$wells_X,
                              WellY        = input$wells_Y,
                              PosX         = input$npos_X,
@@ -225,15 +225,21 @@ shinyServer(function(input, output){
     })
     
     
-    htmFiltered <- reactive({
+    htmFilteredForCurrentPlot <- reactive({
       
-      filterDataFrame( df = htm, 
+      input$plotScatterBoxOrHeatmap
+      
+      isolate({
+        
+        filterDataFrame( df = htm, 
                        batch_col = input$colBatch, 
                        batch = input$batch, 
                        highlightQCfailed = input$highlightQCfailed, 
                        filterByColumn = input$PointplotfilterColumn,  
                        whichValues = input$PointplotfilterValues, 
                        col_QC = col_QC)
+        
+      }) # isolate
       
     })
 
@@ -242,16 +248,16 @@ shinyServer(function(input, output){
     # Plot
     output$plot <- renderPlotly({
         
-        # Take dependency on clicking the "Update plot" button
         input$plotScatterBoxOrHeatmap
         
-        isolate(
+        isolate({
+          
             if( ! is.null( input$batch ) )
             {
               switch(input$plotType,
                  
                      "Scatter plot" = pointPlot(
-                         df =  htmFiltered(), 
+                         df =  htmFilteredForCurrentPlot(), 
                          batch = input$colBatch, 
                          x = input$Xaxis, 
                          y = input$Yaxis, 
@@ -262,7 +268,7 @@ shinyServer(function(input, output){
                          colBatch = input$colBatch),
                        
                      "Boxplot"      = boxPlot(
-                         df =  htmFiltered(), 
+                         df =  htmFilteredForCurrentPlot(), 
                          batch = input$colBatch, 
                          x = input$Xaxis, 
                          y = input$Yaxis, 
@@ -292,7 +298,8 @@ shinyServer(function(input, output){
             {
               ggplotly( ggplot() ) 
             }
-         )
+         
+          }) # isolate
       
     })
     
@@ -525,7 +532,7 @@ shinyServer(function(input, output){
           
           # get the currently plotted dataframe, where the row numbers match the 
           # numbers returned but the clicking observer
-          df <- htmFiltered()
+          df <- htmFilteredForCurrentPlot()
           
           tempPathInTable    <- gsub("\\\\", "/", input$pathInTable)
           tempPathInComputer <- gsub("\\\\", "/", input$pathInComputer)
