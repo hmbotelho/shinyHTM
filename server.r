@@ -519,6 +519,9 @@ shinyServer(function(input, output){
         
         s <- event_data( "plotly_click" )
         
+        browser()
+        cat( s )
+        
         isolate({
           
           if ( length( input$images2display ) == 0 )

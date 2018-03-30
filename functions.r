@@ -62,27 +62,33 @@ read.HTMtable <- function(filepath){
 filterDataFrame <- function( df, batch_col, batch, highlightQCfailed, filterByColumn, whichValues, col_QC )
 {
   # Subset batches
-  if( ! is.null( batch_col ) ) {
+  if( ! is.null( batch_col ) & ! is.null( batch ) ) {
     if ( batch != "All batches" ) {
       df <- df[ df[[batch_col]] == batch, ]
     }
   }
 
   # Subset by columns
-  if( filterByColumn != "None" ) {
-    if( !("All" %in% whichValues) & !is.null( whichValues ) ) {
-      OKrows <- sapply( df[[ filterByColumn ]], function(x)
-      {
-        x %in% whichValues
-      })
-      df <- df[OKrows,]
-    }
-  }    
+  if( !is.null( whichValues) & !is.null(filterByColumn) )
+  {
+    if( filterByColumn != "None" ) {
+      if( !("All" %in% whichValues)  ) {
+        OKrows <- sapply( df[[ filterByColumn ]], function(x)
+        {
+          x %in% whichValues
+        })
+        df <- df[OKrows,]
+      }
+    }    
+  }
   
   # Hide rejected data points if requested
-  if( highlightQCfailed == "Don't show" )
+  if( !is.null( highlightQCfailed) & !is.null(col_QC) )
   {
-    df <- df[df[[col_QC]],]
+    if( highlightQCfailed == "Don't show" )
+    {
+      df <- df[df[[col_QC]],]
+    }
   }
   
   return(df)
@@ -260,7 +266,9 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     if (! is.null( x ) && ! is.null( y ) && ( x != "NA" ) && ( y != "NA" ) )
     { 
       diameter = 50;
-      setRoi = paste0( "IJ.getImage().setRoi( new OvalRoi(",x,",",y,",",diameter,",",diameter,") )");
+      x <- x - 25;
+      y <- y - 25;
+      setRoi = paste0( "IJ.getImage().setRoi( new OvalRoi(", x, "," , y, ",",diameter,",",diameter,") )");
       commands <- paste0( commands, setRoi, "\n" );
     }
     
