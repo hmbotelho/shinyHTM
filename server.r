@@ -304,7 +304,7 @@ shinyServer(function(input, output){
     })
     
     # QC-specific settings
-    approvedExperiments          <- reactive({
+    approvedExperiments   <- reactive({
         input$QCAddfailedExperiments
         input$QCcheckGroup
         unique(as.character(htm[[input$colBatch]]))[!(unique(as.character(htm[[input$colBatch]])) %in% as.character(QCsettings[QCsettings$type == "Failed experiment","minimum"]))]
@@ -330,7 +330,9 @@ shinyServer(function(input, output){
             tags$style(type='text/css', "#QCAddfailedExperiments { width:100%; margin-top: 25px;}")
         )
     })
-    output$UIQCnumeric           <- renderUI({
+    
+    
+    output$UIQCnumeric  <- renderUI({
         input$file1
         input$applyNorm
         
@@ -519,14 +521,16 @@ shinyServer(function(input, output){
         
         s <- event_data( "plotly_click" )
         
-        browser()
-        cat( s )
+        if( is.null( s ) ) 
+        {
+          return( "Welcome!" );
+        }
         
         isolate({
           
           if ( length( input$images2display ) == 0 )
           {
-            return("There are no images for viewing selected.");
+            return( "There are no images for viewing selected." );
           }
           
           print( "You selected:" )

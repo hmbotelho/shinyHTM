@@ -228,10 +228,14 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\")";
     open_image_template = "IJ.open(\"DIRECTORY/FILENAME\")";
 
-    # Generate the expression opening each image
+    
+    # init
     commands <- "import ij.IJ;\n"
+    commands <- paste0( commands, "import ij.ImagePlus", "\n" );
     commands <- paste0( commands, "import ij.gui.OvalRoi", "\n" );
     
+    
+    # Generate the expression opening each image
     for ( i in seq(1, num_images) )
     {
       if( grepl("\\?", filenames[ i ] ) )
@@ -251,6 +255,22 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
         open_image = sub( "FILENAME", filenames[ i ], open_image, fixed = TRUE )
         commands <- paste0( commands, open_image, "\n" )
       }
+      
+      if ( grepl( "LabelMask", filenames[ i ] ) )
+      {
+        set_label_mask_lut = "IJ.run(\"glasbey inverted\", \"\")";
+        commands <- paste0( commands, set_label_mask_lut, "\n" )
+      }
+      
+      get_imp = paste0( "ImagePlus imp", i, " = IJ.getImage() ");
+      commands <- paste0( commands, get_imp, "\n" )
+      
+    }
+    
+    if ( num_images == 2 )
+    {
+      merge_channels = "IJ.run(imp1, \"Merge Channels...\", \"c1=\"+imp1.getTitle()+\" c2=\"+imp2.getTitle()+\" create ignore\");"
+      commands <- paste0( commands, merge_channels, "\n" )
     }
     
     #
