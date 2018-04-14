@@ -223,17 +223,16 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
 # filePath is an array of character strings
 OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe", x, y, z )
   {
+  
     num_images = length( directories );  
   
-    import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\")";
-    open_image_template = "IJ.open(\"DIRECTORY/FILENAME\")";
+    import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\");";
+    open_image_template = "IJ.open(\"DIRECTORY/FILENAME\");";
 
-    
     # init
     commands <- "import ij.IJ;\n"
-    commands <- paste0( commands, "import ij.ImagePlus", "\n" );
-    commands <- paste0( commands, "import ij.gui.OvalRoi", "\n" );
-    
+    commands <- paste0( commands, "import ij.ImagePlus;", "\n" );
+    commands <- paste0( commands, "import ij.gui.OvalRoi;", "\n" );
     
     # Generate the expression opening each image
     for ( i in seq(1, num_images) )
@@ -256,33 +255,37 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
         commands <- paste0( commands, open_image, "\n" )
       }
       
-      if ( grepl( "LabelMask", filenames[ i ] ) )
+      if ( grepl( "LabelMask", filenames[ i ], ignore.case = TRUE ) )
       {
-        set_label_mask_lut = "IJ.run(\"glasbey inverted\", \"\")";
+        set_label_mask_lut = "IJ.run(\"glasbey inverted\", \"\");";
         commands <- paste0( commands, set_label_mask_lut, "\n" )
+        # IJ.run("16-bit", "");
       }
       
-      get_imp = paste0( "ImagePlus imp", i, " = IJ.getImage() ");
+      get_imp = paste0( "ImagePlus imp", i, " = IJ.getImage(); ");
       commands <- paste0( commands, get_imp, "\n" )
       
     }
     
     if ( num_images == 2 )
     {
-      merge_channels = "IJ.run(imp1, \"Merge Channels...\", \"c1=\"+imp1.getTitle()+\" c2=\"+imp2.getTitle()+\" create ignore\");"
+      merge_channels = "IJ.run(imp1, \"Merge Channels...\", \"c1=\"+imp1.getTitle()+\" c2=\"+imp2.getTitle()+\" create\");"
       commands <- paste0( commands, merge_channels, "\n" )
+      commands <- paste0( commands, "IJ.wait( 100 );", "\n" ) # needs time to build the composite image
     }
     
     #
     # highlight object 
     #
     
+    # set slice
     if ( ! is.null( z ) &&  z != "NA" )
     { 
-      setSlice = paste0( "IJ.getImage().setSlice(" , round( z ) , ")" )
+      setSlice = paste0( "IJ.getImage().setPosition( 1 ,", ceiling( z ) ,", 1);" )
       commands <- paste0( commands, setSlice, "\n" );
     }
 
+    # put ROI at object location
     if (! is.null( x ) && ! is.null( y ) && ( x != "NA" ) && ( y != "NA" ) )
     { 
       diameter = 50;
@@ -290,6 +293,8 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
       y <- y - 25;
       setRoi = paste0( "IJ.getImage().setRoi( new OvalRoi(", x, "," , y, ",",diameter,",",diameter,") )");
       commands <- paste0( commands, setRoi, "\n" );
+      addAsOverlay = paste0( "IJ.run (IJ.getImage(), \"Add Selection...\", \"\")" );
+      commands <- paste0( commands, addAsOverlay, "\n" );
     }
     
     #
@@ -1202,4 +1207,14 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
     results_ordered <- results[order(results$t_test__p_value),]
     return(results_ordered)
     
+}
+
+getObjectPositionColumn <- function( names, axis )
+{
+  
+  name = paste0( axis, "Centroid" )
+  if ( name %in% names )   return ( name );
+  
+  return ( "NA" );
+  
 }

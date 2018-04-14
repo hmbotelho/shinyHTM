@@ -77,21 +77,21 @@ shinyServer(function(input, output){
       input$file1
       input$applyNorm
       
-      selectInput("colObjectPosX", "Object's x-position:", as.list( c("NA", names(htm))), width = "100%")
+      selectInput("colObjectPosX", "Object's x-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "X"), width = "100%")
     })
     
     output$UIcolNameObjectPosY       <- renderUI({
       input$file1
       input$applyNorm
       
-      selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), width = "100%")
+      selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "Y"), width = "100%")
     })
     
     output$UIcolNameObjectPosZ       <- renderUI({
       input$file1
       input$applyNorm
       
-      selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), width = "100%")
+      selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "Z"), width = "100%")
     })
     
     
@@ -826,7 +826,7 @@ shinyServer(function(input, output){
               selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosY"]])
             })
             output$UIcolNameObjectPosX     <- renderUI({
-              selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosZ"]])
+              selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosZ"]] )
             })
             
             echo("     done")
