@@ -62,12 +62,14 @@ shinyUI(navbarPage("shinyHTM",
         p("Use this plotting tool to explore your data and inspect the images which produced each data point."),
         verbatimTextOutput("selection"),
         plotlyOutput("plot"),
+        br(),
+        actionButton("plotScatterBoxOrHeatmap", "Update plot", icon = icon("refresh"), width = "100%", style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
         hr(),
+        
         
         fluidRow(
             
             column(2,
-                actionButton("plotScatterBoxOrHeatmap", "Update plot", icon = icon("paper-plane-o")),
                 selectInput("plotType", label = "Plot Type", choices = c("Scatter plot", "Boxplot", "Heatmap"))
             ),
             
