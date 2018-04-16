@@ -2,6 +2,10 @@
 # Phylosophy: the 'htm' data.frame is placed in the global enviromnent, 
 # where it can be accessed and updated by reactive functions
 #
+# all data columns added by shinyHTM have the prefix 'HTM_'
+#
+# The list 'UI' keeps track of all UI settings and allows restoring the shinyHTM session
+#
 # Heatmaps are built from a reactive data.frame 'htmHM()'
 #
 # ==========================================================================
@@ -9,7 +13,9 @@
 # To do:
 # Sync negative control across Normalize&Summarize
 # Update plot symbols each time QC is applied
-# Use a separate function to generate each 'selectInput' widget. This facilitates saving and loading states.
+# Correct the way shiny 'upload files', using a temporary folder (makes it difficult to restore session)
+# Update data table when a new session is loaded
+rm(list = ls())
 enableBookmarking(store = "url")
 source("./functions.r")
 loadpackage("shiny")
@@ -40,59 +46,103 @@ col_QC <- "HTM_QC"
 
 shinyServer(function(input, output){
 
-    # File Input
+
+    
+    ################################################################
+    # 1. FILE INPUT                                                #
+    ################################################################
     observeEvent(input$file1, {
         htm <- read.HTMtable(input$file1$datapath)
         htm[[col_QC]] <- TRUE
         htm <<- htm
     })
 
-    # Settings
-    output$UIcolNameTreatment <- renderUI({
+    
+    ################################################################
+    # 2. SETTINGS                                                  #
+    ################################################################
+    output$UIcolNameTreatment        <- renderUI({
         input$file1
         input$applyNorm
         
         selectInput("colTreatment", "Treatment:", as.list(names(htm)), width = "100%")
     })
-    output$UIcolNameBatch     <- renderUI({
+    output$UIcolNameBatch            <- renderUI({
         input$file1
         input$applyNorm
         
         selectInput("colBatch", "Batch:", as.list(names(htm)), width = "100%")
     })
-    output$UIcolNameWell      <- renderUI({
+    output$UIcolNameWell             <- renderUI({
         input$file1
         input$applyNorm
         
         selectInput("colWell", "Well coordinate:", as.list(names(htm)), width = "100%")
     })
-    output$UIcolNamePos       <- renderUI({
+    output$UIcolNamePos              <- renderUI({
         input$file1
         input$applyNorm
         
         selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), width = "100%")
     })
-    
+    output$UIpathInTable             <- renderUI({
+        textInput("pathInTable", "Image root folder name in table", "c:\\tutorial\\myplate_01", width = "100%")
+    })
+    output$UIpathInComputer          <- renderUI({
+        textInput("pathInComputer", "Image root folder name in this computer", "c:\\myplate_01", width = "100%")
+    })
+    output$UIprefixPath              <- renderUI({
+        textInput("prefixPath", "Prefix: column with folder name", "PathName_")
+    })
+    output$UIprefixFile              <- renderUI({
+        textInput("prefixFile", "Prefix: column with file name", "FileName_")
+    })
     output$UIcolNameObjectPosX       <- renderUI({
       input$file1
       input$applyNorm
       
       selectInput("colObjectPosX", "Object's x-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "X"), width = "100%")
     })
-    
+
     output$UIcolNameObjectPosY       <- renderUI({
       input$file1
       input$applyNorm
       
       selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "Y"), width = "100%")
     })
-    
+	
     output$UIcolNameObjectPosZ       <- renderUI({
       input$file1
       input$applyNorm
       
       selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "Z"), width = "100%")
     })
+    output$UIwells_Y                 <- renderUI({
+        numericInput("wells_Y", "Number of Rows", 16)
+    })
+    output$UIwells_X                 <- renderUI({
+        numericInput("wells_X", "Number of Columns", 24)
+    })
+    output$UInpos_Y                  <- renderUI({
+        numericInput("npos_Y", "Number of subposition Rows", 2)
+    })
+    output$UInpos_X                  <- renderUI({
+        numericInput("npos_X", "Number of subposition Columns", 2)
+    })
+    output$UIsquaredodge             <- renderUI({
+        sliderInput("squaredodge", "Separation between positions", min=0, max=0.5, value=0.2, step=0.1)
+    })
+    output$UIsquaresize              <- renderUI({
+        sliderInput("squaresize", "Square size", min=0.5, max=5, value=1, step=0.5)
+    })
+
+    
+    
+    
+    
+    
+    
+    
     
     
     output$UIfiji_path        <- renderUI({
@@ -118,7 +168,9 @@ shinyServer(function(input, output){
     
     
     
-    # Plot settings
+    ################################################################
+    # 3. PLOTTING                                                  #
+    ################################################################
     output$UIselectBatch <- renderUI({
         input$file1
         input$plotType
@@ -303,7 +355,11 @@ shinyServer(function(input, output){
       
     })
     
-    # QC-specific settings
+    
+    
+    ################################################################
+    # 4. QUALITY CONTROL                                           #
+    ################################################################
     approvedExperiments   <- reactive({
         input$QCAddfailedExperiments
         input$QCcheckGroup
@@ -516,7 +572,10 @@ shinyServer(function(input, output){
     })
     
     
-    # Plot-Fiji interaction
+    
+    ################################################################
+    # PLOT-FIJI INTERACTION                                        #
+    ################################################################
     output$selection <- renderPrint( {
         
         s <- event_data( "plotly_click" )
@@ -572,7 +631,9 @@ shinyServer(function(input, output){
 
     
     
-    # Normalization settings
+    ################################################################
+    # 5. NORMALIZATION                                             #
+    ################################################################
     output$UINormFeatures      <- renderUI({
         input$file1
         input$applySummary
@@ -629,7 +690,9 @@ shinyServer(function(input, output){
 
 
     
-    # Treatment summary
+    ################################################################
+    # 6. TREATMENT SUMMARY                                         #
+    ################################################################
     output$UISummaryMeasurements <- renderUI({
         input$file1
         input$applyNorm
@@ -710,75 +773,207 @@ shinyServer(function(input, output){
 
     
     
-    # R Console
+    ################################################################
+    # R CONSOLE                                                    #
+    ################################################################
     runcodeServer()
     
     
     
-    # Save & Load session
+    ################################################################
+    # 6. SAVE & LOAD SESSION                                       #
+    ################################################################
+    
+    # Keep track of the state of all items in the UI
+    UI <<- reactive(
+        list(
+            list(type     = "input",
+                 name     = "file1",
+                 choices  = NA,
+                 selected = input$file1$datapath,
+                 comment  = "The location of the raw data table"),
+            list(type     = "input",
+                 name     = "colTreatment",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$colTreatment,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "colBatch",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$colBatch,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "colWell",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$colWell,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "colPos",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$colPos,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "fiji_binary",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$fiji_binary,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "images2display",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$images2display,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "pathInTable",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$pathInTable,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "pathInComputer",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$pathInComputer,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "prefixPath",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$prefixPath,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "prefixFile",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$prefixFile,
+                 comment  = ""),
+            
+            list(type     = "input",
+                 name     = "colObjectPosX",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$colObjectPosX,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "colObjectPosY",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$colObjectPosY,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "colObjectPosZ",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$colObjectPosZ,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "wells_Y",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$wells_Y,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "wells_X",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$wells_X,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "npos_Y",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$npos_Y,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "npos_X",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$npos_X,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "squaredodge",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$squaredodge,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "squaresize",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$squaresize,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "NormFeatures",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$NormFeatures,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "NormDataTransform",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$NormDataTransform,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "NormGradientCorr",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$NormGradientCorr,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "NormMethod",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$NormMethod,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "NormNegCtrl",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$NormNegCtrl,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "SummaryMeasurements",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$SummaryMeasurements,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "SummaryNegCtrl",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$SummaryNegCtrl,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "SummaryPosCtrl",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$SummaryPosCtrl,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "SummaryNumObjects",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$SummaryNumObjects,
+                 comment  = "")
+        )
+    )
+    
+    
     observeEvent(input$buttonSessionSave, {
         
         withCallingHandlers({
             html("echo_SaveLoadSession", "", add = FALSE)
             
-            echo("Dialog box: Where is the image table file?")
+            echo("Dialog box: Where is the data table currently loaded?")
             echo("")
-            pathImageTable <- choose.files( caption = "Select the image table file",
-                                            multi = FALSE, filters = Filters["All",] )
-            echo("Saving analysis session of image table '", pathImageTable, "'")
-            echo("")
+            path_to_htm <- tclvalue( tkgetOpenFile() )
+
+            temp <- UI()
+            temp[[1]]$selected <- path_to_htm
+            UI <- reactive(temp)
             
             echo("Dialog box: Where shall the session file be saved?")
             echo("")
-            targetpath <- tclvalue( tkgetSaveFile(initialfile = "settings.r") )
+            targetpath <- tclvalue( tkgetSaveFile(initialfile = "shinyHTM_session.RData") )
             
-            echo("Saving all shinyHTM settings.")
-            echo("Please keep the original image table at the same location.")
-            echo("Saving shinyHTM tables and settings to ", targetpath)
+            echo("")
+            echo("Gathering session state information...")
             
+            # Columns generated by shinyHTM
+            htm_columns <- htm[,grepl("^HTM_", colnames(htm)), drop=FALSE]
             
-            # Subset the columns generated by shinyHTM
-            HTMcols         <- grepl("^HTM_.*$", names(htm))
-            HTMdf           <- data.frame(htm[,HTMcols])
-            colnames(HTMdf) <- names(htm)[HTMcols]
+            echo("")
+            echo("Saving shinyHTM session to ", targetpath)
+            save(UI, QCsettings, htm_columns, file = "c:/users/hugo/Desktop/shinyHTM_session.RData")
             
-            
-            # Extract the selected settings
-            HTMsettings <- list(HTMdf               = HTMdf,
-                                
-                                pathImageTable      = pathImageTable,
-                                
-                                colTreatment        = isolate(input$colTreatment), 
-                                colBatch            = isolate(input$colBatch), 
-                                colWell             = isolate(input$colWell), 
-                                colPos              = isolate(input$colPos), 
-                                
-                                colObjectPosX       = isolate(input$colObjectPosX), 
-                                colObjectPosY       = isolate(input$colObjectPosY), 
-                                colObjectPosZ       = isolate(input$colObjectPosZ), 
-                                
-                                
-                                fiji_binary         = isolate(input$fiji_binary), 
-                                images2display      = isolate(input$images2display), 
-                                
-                                NormFeatures        = isolate(input$NormFeatures), 
-                                NormDataTransform   = isolate(input$NormDataTransform), 
-                                NormGradientCorr    = isolate(input$NormGradientCorr), 
-                                NormMethod          = isolate(input$NormMethod), 
-                                NormNegCtrl         = isolate(input$NormNegCtrl), 
-                                
-                                SummaryMeasurements = isolate(input$SummaryMeasurements), 
-                                SummaryNegCtrl      = isolate(input$SummaryNegCtrl), 
-                                SummaryPosCtrl      = isolate(input$SummaryPosCtrl), 
-                                SummaryNumObjects   = isolate(input$SummaryNumObjects))
-            
-            dput(HTMsettings, targetpath)
+            echo("")
             echo("Done!")
+            echo("The session can only be restored if the dataset is kept in its current location:")
+            echo("     ", isolate(UI())[[1]]$selected)
             
         },
         message = function(m) html("echo_SaveLoadSession", m$message, add = TRUE)
         )
     })
+    
     observeEvent(input$buttonSessionLoad, {
         
         withCallingHandlers({
@@ -788,96 +983,133 @@ shinyServer(function(input, output){
             echo("")
             settingsFilePath <-  tclvalue(tkgetOpenFile(title = "Open shinyHTM session file.")) 
 
-            # Load the settings file
-            echo("* Loading settings file")
-            HTMsettings <- dget(settingsFilePath)
-            echo("     done")
+            # Clean work environment
+            echo("* Resetting session")
+            if(exists("htm"))         rm(htm)
+            if(exists("htm_columns")) rm(htm_columns)
+            if(exists("QCsettings"))  rm(QCsettings)
+            if(exists("UI"))          rm(UI)
+
+            # Load R objects
+            load(settingsFilePath)
+
+            path_to_htm <- isolate(UI())[[1]]$selected
             
-            
-            # Reconstitute the htm data frame
-            echo("* Loading image table")
-            htm <- read.HTMtable(HTMsettings[["pathImageTable"]])
-            htm <- cbind(htm, HTMsettings[["HTMdf"]])
-            htm <<- htm
-            output$valuestable <- renderDataTable(htm)
-            echo("     done")
-            
-            
-            # Reconstitute all widget values
-            
-            echo("* Loading experiment settings")
-            output$UIcolNameTreatment <- renderUI({
-                selectInput("colTreatment", "Treatment:", as.list(names(htm)), width = "100%", selected = HTMsettings[["colTreatment"]])
-            })
-            output$UIcolNameBatch     <- renderUI({
-                selectInput("colBatch", "Batch:", as.list(names(htm)), width = "100%", selected = HTMsettings[["colBatch"]])
-            })
-            output$UIcolNameWell      <- renderUI({
-                selectInput("colWell", "Well coordinate:", as.list(names(htm)), width = "100%", selected = HTMsettings[["colWell"]])
-            })
-            output$UIcolNamePos       <- renderUI({
-                selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), width = "100%", selected = HTMsettings[["colPos"]])
-            })
-            
-            output$UIcolNameObjectPosX     <- renderUI({
-              selectInput("colObjectPosX", "Object's x-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosX"]])
-            })
-            output$UIcolNameObjectPosX     <- renderUI({
-              selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosY"]])
-            })
-            output$UIcolNameObjectPosX     <- renderUI({
-              selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), width = "100%", selected = HTMsettings[["colObjectPosZ"]] )
-            })
-            
-            echo("     done")
-            
-            
-            echo("* Loading Fji Settings")
-            output$UIfiji_path        <- renderUI({
-                textInput("fiji_binary", "Path to Fiji ", value = HTMsettings[["fiji_binary"]], width = "100%")
-            })
-            output$UIavailableimages  <- renderUI({
-                checkboxGroupInput("images2display", "Select images to be viewed upon clicking within a plot", as.list(img_names), selected = HTMsettings[["images2display"]])
-            })
-            echo("     done")
-            
-            
-            echo("* Loading Normalization Settings")
-            output$UINormFeatures      <- renderUI({
-                selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), width = "100%", multiple = FALSE, selected = HTMsettings[["NormFeatures"]])
-            })
-            output$UINormDataTransform <- renderUI({
-                selectInput("NormDataTransform", "Data transformation", choices = list("None selected", "log2"), width = "100%", selected = HTMsettings[["NormDataTransform"]])
-            })
-            output$UINormGradientCorr  <- renderUI({
-                selectInput("NormGradientCorr", "Batch-wise spatial gradient correction", choices = list("None selected", "median polish", "median 7x7", "median 5x5", "median 3x3", "z-score 5x5"), width = "100%", selected = HTMsettings[["NormGradientCorr"]])
-            })
-            output$UINormMethod        <- renderUI({
-                selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"), width = "100%", selected = HTMsettings[["NormMethod"]])
-            })
-            output$UINormNegCtrl       <- renderUI({
-                selectInput("NormNegCtrl", "Negative control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))), width = "100%", selected = HTMsettings[["NormNegCtrl"]])
-            })
-            echo("     done")
-            
-            
-            echo("* Loading Treatment Summary settings")
-            output$UISummaryMeasurements <- renderUI({
-                selectInput("SummaryMeasurements", "Measurements to be analyzed", choices = as.list(names(htm)), width = "100%", multiple = TRUE, selected = HTMsettings[["SummaryMeasurements"]])
-            })
-            output$UISummaryNegCtrl      <- renderUI({
-                selectInput("SummaryNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))), width = "100%", selected = HTMsettings[["SummaryNegCtrl"]])
-            })
-            output$UISummaryPosCtrl      <- renderUI({
-                selectInput("SummaryPosCtrl", "Positive control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))), width = "100%", selected = HTMsettings[["SummaryPosCtrl"]])
-            })
-            output$UISummaryNumObjects   <- renderUI({
-                selectInput("SummaryNumObjects", "Number of objects per image", choices = as.list(names(htm)), width = "100%", selected = HTMsettings[["SummaryNumObjects"]])
-            })
-            echo("     done")
-            
-            echo("")
-            echo("Loaded all settings!")
+            # Integrity check
+            if(!file.exists(path_to_htm)){
+                echo("CANNOT RESTORE SESSION: Data table file does not extist")
+                echo("     ", path_to_htm)
+            } else{
+                
+                # Reconstitute the htm data frame
+                echo("* Loading data table")
+
+                htm <- read.HTMtable(path_to_htm)
+                htm <- htm[,setdiff(colnames(htm), colnames(htm_columns))]       # Avoid column duplication
+                htm <- cbind(htm, htm_columns)
+                rm(htm_columns)
+                htm <<- htm
+                
+                echo("* Loading widget settings")
+                
+                output$UIcolNameTreatment    <- renderUI({
+                    selectInput("colTreatment", "Treatment:", as.list(names(htm)), selected = subsetUI(UI, "input", "colTreatment"),  width = "100%")
+                })
+                output$UIcolNameBatch        <- renderUI({
+                    selectInput("colBatch", "Batch:", as.list(names(htm)), selected = subsetUI(UI, "input", "colBatch"), width = "100%")
+                })
+                output$UIcolNameWell         <- renderUI({
+                    selectInput("colWell", "Well coordinate:", as.list(names(htm)), selected = subsetUI(UI, "input", "colWell"), width = "100%")
+                })
+                output$UIcolNamePos          <- renderUI({
+                    selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), selected = subsetUI(UI, "input", "colPos"), width = "100%")
+                })
+                output$UIfiji_path           <- renderUI({
+                    if (Sys.info()['sysname'] == "Windows")
+                    {
+                        fiji_binary_path = subsetUI(UI, "input", "fiji_binary")
+                    } 
+                    else 
+                    {
+                        fiji_binary_path = "/Applications/Fiji.app/Contents/MacOS/ImageJ-macosx"
+                    }
+                    textInput("fiji_binary", "Path to Fiji ", value = subsetUI(UI, "input", "fiji_binary"), width = "100%")
+                })
+                output$UIavailableimages     <- renderUI({
+                    img_names <- gsub(paste0("^", subsetUI(UI, "input", "prefixPath"), "(.*)"), "\\1", names(htm)[grep(paste0("^", subsetUI(UI, "input", "prefixPath")), names(htm))])
+                    checkboxGroupInput("images2display", "Select images to be viewed upon clicking within a plot", as.list(img_names), selected = subsetUI(UI, "input", "images2display"))
+                })
+                output$UIpathInTable         <- renderUI({
+                    textInput("pathInTable", "Image root folder name in table", value = subsetUI(UI, "input", "pathInTable"), width = "100%")
+                })
+                output$UIpathInComputer      <- renderUI({
+                    textInput("pathInComputer", "Image root folder name in this computer", value = subsetUI(UI, "input", "pathInComputer"), width = "100%")
+                })
+                output$UIprefixPath          <- renderUI({
+                    textInput("prefixPath", "Prefix: column with folder name", value = subsetUI(UI, "input", "prefixPath"))
+                })
+                output$UIprefixFile          <- renderUI({
+                    textInput("prefixFile", "Prefix: column with file name", value = subsetUI(UI, "input", "prefixFile"))
+                })
+                output$UIcolNameObjectPosX   <- renderUI({
+                    selectInput("colObjectPosX", "Object's x-position:", as.list( c("NA", names(htm))), selected = subsetUI(UI, "input", "colObjectPosX"), width = "100%")
+                })
+                output$UIcolNameObjectPosY   <- renderUI({
+                    selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), selected = subsetUI(UI, "input", "colObjectPosY"), width = "100%")
+                })
+                output$UIcolNameObjectPosZ   <- renderUI({
+                    selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), selected = subsetUI(UI, "input", "colObjectPosZ"), width = "100%")
+                })
+                output$UIwells_Y             <- renderUI({
+                    numericInput("wells_Y", "Number of Rows", value = subsetUI(UI, "input", "wells_Y"))
+                })
+                output$UIwells_X             <- renderUI({
+                    numericInput("wells_X", "Number of Columns", value = subsetUI(UI, "input", "wells_X"))
+                })
+                output$UInpos_Y              <- renderUI({
+                    numericInput("npos_Y", "Number of subposition Rows", value = subsetUI(UI, "input", "npos_Y"))
+                })
+                output$UInpos_X              <- renderUI({
+                    numericInput("npos_X", "Number of subposition Columns", value = subsetUI(UI, "input", "npos_X"))
+                })
+                output$UIsquaredodge         <- renderUI({
+                    sliderInput("squaredodge", "Separation between positions", min=0, max=0.5, value=subsetUI(UI, "input", "squaredodge"), step=0.1)
+                })
+                output$UIsquaresize          <- renderUI({
+                    sliderInput("squaresize", "Square size", min=0.5, max=5, value=subsetUI(UI, "input", "squaresize"), step=0.5)
+                })
+                output$UINormFeatures        <- renderUI({
+                    selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), selected = subsetUI(UI, "input", "NormFeatures"), width = "100%", multiple = FALSE)
+                })
+                output$UINormDataTransform   <- renderUI({
+                    selectInput("NormDataTransform", "Data transformation", choices = list("None selected", "log2"), selected = subsetUI(UI, "input", "NormDataTransform"), width = "100%")
+                })
+                output$UINormGradientCorr    <- renderUI({
+                    selectInput("NormGradientCorr", "Batch-wise spatial gradient correction", choices = list("None selected", "median polish", "median 7x7", "median 5x5", "median 3x3", "z-score 5x5"), selected = subsetUI(UI, "input", "NormGradientCorr"), width = "100%")
+                })
+                output$UINormMethod          <- renderUI({
+                    selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "z-score (median subtraction)", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"), selected = subsetUI(UI, "input", "NormMethod"), width = "100%")
+                })
+                output$UINormNegCtrl         <- renderUI({
+                    selectInput("NormNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[subsetUI(UI, "input", "colTreatment")]]))), selected = subsetUI(UI, "input", "NormNegCtrl"), width = "100%")
+                })
+                output$UISummaryMeasurements <- renderUI({
+                    selectInput("SummaryMeasurements", "Measurements to be analyzed", choices = as.list(names(htm)), selected = subsetUI(UI, "input", "SummaryMeasurements"), width = "100%", multiple = TRUE)
+                })
+                output$UISummaryNegCtrl      <- renderUI({
+                    selectInput("SummaryNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[subsetUI(UI, "input", "colTreatment")]]))), selected = subsetUI(UI, "input", "SummaryNegCtrl"), width = "100%")
+                })
+                output$UISummaryPosCtrl      <- renderUI({
+                    selectInput("SummaryPosCtrl", "Positive control", choices = as.list(c("None selected", sort(htm[[subsetUI(UI, "input", "colTreatment")]]))), selected = subsetUI(UI, "input", "SummaryPosCtrl"), width = "100%")
+                })
+                output$UISummaryNumObjects   <- renderUI({
+                    selectInput("SummaryNumObjects", "Number of objects per image", choices = as.list(names(htm)), selected = subsetUI(UI, "input", "SummaryNumObjects"), width = "100%")
+                })
+                
+                echo("")
+                echo("Loaded all settings!")
+                
+            }
 
         },
         message = function(m) html("echo_SaveLoadSession", m$message, add = TRUE)
@@ -885,9 +1117,14 @@ shinyServer(function(input, output){
     })
     
     
-    # Data table
-    observeEvent(input$file1, {
-        input$applyNorm
+    
+    ################################################################
+    # DATA TABLE                                                   #
+    ################################################################
+    observeEvent({input$file1
+                  input$buttonSessionLoad
+                  input$applyNorm
+                  input$update_dataTable}, {
         output$valuestable <- renderDataTable(htm)
     })
 })

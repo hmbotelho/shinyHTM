@@ -35,23 +35,24 @@ shinyUI(navbarPage("shinyHTM",
         uiOutput("UIavailableimages"),
         hr(),
         
-        textInput("pathInTable", "Image root folder name in table", "c:\\tutorial\\myplate_01", width = "100%"),
-        textInput("pathInComputer", "Image root folder name in this computer", "c:\\myplate_01", width = "100%"),
-        textInput("prefixPath", "Prefix: column with folder name", "PathName_"),
-        textInput("prefixFile", "Prefix: column with file name", "FileName_"),
+        uiOutput("UIpathInTable"),
+        uiOutput("UIpathInComputer"),
+        uiOutput("UIprefixPath"),
+        uiOutput("UIprefixFile"),
+        hr(),
+        
         uiOutput("UIcolNameObjectPosX"),
         uiOutput("UIcolNameObjectPosY"),
         uiOutput("UIcolNameObjectPosZ"),
         hr(),
         
         h3("Heatmap settings"),
-        numericInput("wells_Y", "Number of Rows", 16),
-        numericInput("wells_X", "Number of Columns", 24),
-        numericInput("npos_Y", "Number of subposition Rows", 2),
-        numericInput("npos_X", "Number of subposition Columns", 2),
-        sliderInput("squaredodge", "Separation between positions", min=0, max=0.5, value=0.2, step=0.1),
-        sliderInput("squaresize", "Square size", min=0.5, max=5, value=1, step=0.5)
-        
+        uiOutput("UIwells_Y"),
+        uiOutput("UIwells_X"),
+        uiOutput("UInpos_Y"),
+        uiOutput("UInpos_X"),
+        uiOutput("UIsquaredodge"),
+        uiOutput("UIsquaresize")
     ),
 
 
@@ -192,6 +193,8 @@ shinyUI(navbarPage("shinyHTM",
     navbarMenu("More",
                
         tabPanel("View table",
+            actionButton("update_dataTable", "Update table", icon = icon("refresh"), style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+            br(),
             dataTableOutput("valuestable")
         ),
         
@@ -201,7 +204,7 @@ shinyUI(navbarPage("shinyHTM",
             actionButton("buttonSessionSave", "Save session...", icon = icon("save")),
             br(),br(),br(),
             actionButton("buttonSessionLoad", "Restore previous session...", icon = icon("refresh")),
-            br(),
+            br(),br(),
             verbatimTextOutput("echo_SaveLoadSession")
         ),
         

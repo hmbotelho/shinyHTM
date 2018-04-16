@@ -59,8 +59,7 @@ read.HTMtable <- function(filepath){
     return( read.csv(filepath, sep = ",", stringsAsFactors = FALSE) )
 }
 
-filterDataFrame <- function( df, batch_col, batch, highlightQCfailed, filterByColumn, whichValues, col_QC )
-{
+filterDataFrame <- function( df, batch_col, batch, highlightQCfailed, filterByColumn, whichValues, col_QC ){
   # Subset batches
   if( ! is.null( batch_col ) & ! is.null( batch ) ) {
     if ( batch != "All batches" ) {
@@ -95,6 +94,42 @@ filterDataFrame <- function( df, batch_col, batch, highlightQCfailed, filterByCo
   
 }
 
+# Convenience function which simplifies subsetting the UI list
+subsetUI <- function(LS, type = "input", name = "", field = "selected"){
+    
+    # Let's take this list 'UI' as an example
+    # [[1]]
+    # [[1]]$type
+    # [1] "input"
+    # 
+    # [[1]]$name
+    # [1] "colTreatment"
+    # 
+    # [[1]]$choices
+    # [1] "NOT SUPPORTED"
+    # 
+    # [[1]]$selected
+    # [1] "X1_Treatment"
+    # 
+    # [[1]]$comment
+    # [1] ""
+    #
+    # 'subsetUI(UI)' would return 'X1_Treatment'
+    # 'subsetUI(UI, field = "choices")' would return 'NOT SUPPORTED'
+    
+    if(is.reactive(LS)){
+        LS <- isolate(LS())
+    }
+    
+    types <- sapply(LS, function(x) x$type)
+    names <- sapply(LS, function(x) x$name)
+    okelement <- which(types == type & names == name)
+    
+    if(length(okelement) > 1) stop(paste0("There are multiple list elements matching the criteria: ", paste(okelement, collapse = ", ")))
+    
+    # Return result
+    LS[[okelement]][[field]]
+}
 
 # Generate Plotly scatter/jitter plot
 pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", colTreatment, colBatch ){
