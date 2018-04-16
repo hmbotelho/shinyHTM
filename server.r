@@ -659,6 +659,37 @@ shinyServer(function(input, output){
         selectInput("NormMethod", "Batch-wise normalisation against negative control", choices = list("None selected", "z-score", "z-score (median subtraction)", "robust z-score", "subtract mean ctrl", "divide by mean ctrl", "subtract median ctrl", "divide by median ctrl"), width = "100%")
     })
     
+    output$UINormFormula       <- renderUI({
+        
+        input$NormMethod
+        
+        norm_formula_latex <- NULL
+        if(input$NormMethod == "z-score") {
+            norm_formula_latex <- "$$\\Huge{Z-Score (x_{plate_{i}}) = \\frac{x_{plate_{i}}-Average_{NegCtrl,plate_{i}}}{sd_{NegCtrl,plate_{i}}}}$$"
+        } 
+        else if(input$NormMethod == "z-score (median subtraction)") {
+            norm_formula_latex <- "$$\\Huge{Z-Score (x_{plate_{i}}) = \\frac{x_{plate_{i}}-Median_{NegCtrl,plate_{i}}}{sd_{NegCtrl,plate_{i}}}}$$"
+        }
+        else if(input$NormMethod == "robust z-score") {
+            norm_formula_latex <- "$$\\Huge{Robust Z-Score (x_{plate_{i}}) = \\frac{x_{plate_{i}}-Median_{NegCtrl,plate_{i}}}{MAD_{NegCtrl,plate_{i}}}}$$"
+        }
+        else if(input$NormMethod == "subtract mean ctrl") {
+            norm_formula_latex <- "$$\\Huge{Difference to Mean (x_{plate_{i}}) = x_{plate_{i}} - Average_{NegCtrl,plate_{i}}}$$"
+        }
+        else if(input$NormMethod == "divide by mean ctrl") {
+            norm_formula_latex <- "$$\\Huge{Fold Change versus Mean (x_{plate_{i}}) = \\frac{x_{plate_{i}}}{Average_{NegCtrl,plate_{i}}}}$$"
+        }
+        else if(input$NormMethod == "subtract median ctrl") {
+            norm_formula_latex <- "$$\\Huge{Difference to Median (x_{plate_{i}}) = x_{plate_{i}} - Median_{NegCtrl,plate_{i}}}$$"
+        }
+        else if(input$NormMethod == "divide by median ctrl") {
+            norm_formula_latex <- "$$\\Huge{Fold Change versus Median (x_{plate_{i}}) = \\frac{x_{plate_{i}}}{Median_{NegCtrl,plate_{i}}}}$$"
+        }
+
+        withMathJax(norm_formula_latex)
+    })
+
+    
     output$UINormNegCtrl       <- renderUI({
         input$file1
         
