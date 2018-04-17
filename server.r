@@ -259,7 +259,7 @@ shinyServer(function(input, output){
         }
     })
     
-    observeEvent(c(input$file1, input$buttonSessionLoad, input$plotType),{
+    observeEvent(c(input$file1, input$buttonSessionLoad, input$plotType, input$applyNorm),{
 
         mychoices_allcols          <- if (exists("htm")) as.list(names(htm)) else NULL
         mychoices_allcols_none     <- if (exists("htm")) as.list(c("None", names(htm))) else NULL
