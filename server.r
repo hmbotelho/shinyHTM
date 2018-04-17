@@ -14,8 +14,7 @@
 # Sync negative control across Normalize&Summarize
 # Update plot symbols each time QC is applied
 # Correct the way shiny 'upload files', using a temporary folder (makes it difficult to restore session)
-# Update data table when a new session is loaded
-rm(list = ls())
+# Streamline the QC GUI
 enableBookmarking(store = "url")
 source("./functions.r")
 loadpackage("shiny")
@@ -30,31 +29,75 @@ loadpackage("raster")
 # Adjust maximum upload size to 2 Gb
 options(shiny.maxRequestSize=2*1024^3)
 
-# Initialize variables
-if(exists("htm")) rm(htm)
-if(exists("QCsettings")) rm(QCsettings)
-
-QCsettings <<- data.frame(type       = character(), 
-                         measurement = character(), 
-                         minimum     = character(), 
-                         maximum     = character(),
-                         failed      = integer(),
-                         stringsAsFactors = FALSE)
-
 col_QC <- "HTM_QC"
+
+widgetnames <- {c("colTreatment", "colBatch", "colWell", "colPos", 
+                  "fiji_binary", "images2display", 
+                  "pathInTable", "pathInComputer", "prefixPath", "prefixFile",
+                  "colObjectPosX", "colObjectPosY", "colObjectPosZ",
+                  "wells_Y", "wells_X", "npos_Y", "npos_X", 
+                  "squaredodge", "squaresize",
+                  
+                  "selection", "plotScatterBoxOrHeatmap", "plotType", 
+                  "batch", "Xaxis", "Yaxis", 
+                  "highlightQCfailed", "PointplotsplitBy", "PointplotfilterColumn", "PointplotfilterValues",
+                  "BoxplothighlightCenter", "BoxplotsplitBy", "LUTcolors", "LUTminmax", 
+                  
+                  "QCfailedExperiment", "QCnumMeasurement", "QCnumMin", "QCnumMax", 
+                  "QCtxtMeasurement", "QCtxtBad", "QCcheckGroup", 
+                  
+                  "NormFeatures", "NormDataTransform", "NormGradientCorr", "NormMethod", "NormNegCtrl", 
+                  
+                  "SummaryMeasurements", "SummaryNegCtrl", "SummaryPosCtrl", "SummaryNumObjects", 
+                  
+                  "echo_TreatmentSummary", "TreatmentSummaryTable",
+                  
+                  "ValuesTable")}
 
 
 shinyServer(function(input, output){
 
-
+    ################################################################
+    # 0. INITIALIZE VARIABLES                                      #
+    ################################################################
+    if(exists("htm")) rm(htm, inherits = TRUE)
+    if(exists("QCsettings")) rm(QCsettings, inherits = TRUE)
+    for(i in widgetnames) reset(i)
+    
+    QCsettings <<- data.frame(type             = character(), 
+                              measurement      = character(), 
+                              minimum          = character(), 
+                              maximum          = character(),
+                              failed           = integer(),
+                              stringsAsFactors = FALSE)
+    
+    
     
     ################################################################
     # 1. FILE INPUT                                                #
     ################################################################
     observeEvent(input$file1, {
+
+        # Reset datasets
+        if(exists("htm")) rm(htm, inherits = TRUE)
+
+        QCsettings <<- data.frame(type             = character(), 
+                                  measurement      = character(), 
+                                  minimum          = character(), 
+                                  maximum          = character(),
+                                  failed           = integer(),
+                                  stringsAsFactors = FALSE)
+
+        # Read new dataset
         htm <- read.HTMtable(input$file1$datapath)
         htm[[col_QC]] <- TRUE
         htm <<- htm
+        
+        # Reset widgets to their original values
+        for(i in widgetnames){
+            reset(i)
+        }
+        
     })
 
     
@@ -65,25 +108,33 @@ shinyServer(function(input, output){
         input$file1
         input$applyNorm
         
-        selectInput("colTreatment", "Treatment:", as.list(names(htm)), width = "100%")
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+
+        selectInput("colTreatment", "Treatment:", mychoices, width = "100%")
     })
     output$UIcolNameBatch            <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("colBatch", "Batch:", as.list(names(htm)), width = "100%")
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+        
+        selectInput("colBatch", "Batch:", mychoices, width = "100%")
     })
     output$UIcolNameWell             <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("colWell", "Well coordinate:", as.list(names(htm)), width = "100%")
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+        
+        selectInput("colWell", "Well coordinate:", mychoices, width = "100%")
     })
     output$UIcolNamePos              <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), width = "100%")
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+        
+        selectInput("colPos", "Sub-position coordinate:", mychoices, width = "100%")
     })
     output$UIpathInTable             <- renderUI({
         textInput("pathInTable", "Image root folder name in table", "c:\\tutorial\\myplate_01", width = "100%")
@@ -101,21 +152,30 @@ shinyServer(function(input, output){
       input$file1
       input$applyNorm
       
-      selectInput("colObjectPosX", "Object's x-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "X"), width = "100%")
+      mychoices  <- if (exists("htm")) as.list( c("NA", names(htm))) else NULL
+      myselected <- if (exists("htm")) getObjectPositionColumn( names(htm), "X") else NULL
+      
+      selectInput("colObjectPosX", "Object's x-position:", mychoices, selected = myselected, width = "100%")
     })
 
     output$UIcolNameObjectPosY       <- renderUI({
       input$file1
       input$applyNorm
       
-      selectInput("colObjectPosY", "Object's y-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "Y"), width = "100%")
+      mychoices  <- if (exists("htm")) as.list( c("NA", names(htm))) else NULL
+      myselected <- if (exists("htm")) getObjectPositionColumn( names(htm), "Y") else NULL
+      
+      selectInput("colObjectPosY", "Object's y-position:", mychoices, selected = myselected, width = "100%")
     })
 	
     output$UIcolNameObjectPosZ       <- renderUI({
       input$file1
       input$applyNorm
       
-      selectInput("colObjectPosZ", "Object's z-position:", as.list( c("NA", names(htm))), selected = getObjectPositionColumn( names(htm), "Z"), width = "100%")
+      mychoices  <- if (exists("htm")) as.list( c("NA", names(htm))) else NULL
+      myselected <- if (exists("htm")) getObjectPositionColumn( names(htm), "Z") else NULL
+      
+      selectInput("colObjectPosZ", "Object's z-position:", mychoices, selected = myselected, width = "100%")
     })
     output$UIwells_Y                 <- renderUI({
         numericInput("wells_Y", "Number of Rows", 16)
@@ -162,8 +222,14 @@ shinyServer(function(input, output){
     
     output$UIavailableimages  <- renderUI({
         input$file1
-        img_names <- gsub(paste0("^", input$prefixPath, "(.*)"), "\\1", names(htm)[grep(paste0("^", input$prefixPath), names(htm))])
-        checkboxGroupInput("images2display", "Select images to be viewed upon clicking within a plot", as.list(img_names))
+        
+        if(exists("htm")){
+            img_names <- gsub(paste0("^", input$prefixPath, "(.*)"), "\\1", names(htm)[grep(paste0("^", input$prefixPath), names(htm))])
+        } else{
+            img_names <- NULL
+        }
+        
+        checkboxGroupInput("images2display", "Select images to be viewed upon clicking within a plot", as.list(img_names), width = "100%")
     })
     
     
@@ -174,6 +240,10 @@ shinyServer(function(input, output){
     output$UIselectBatch <- renderUI({
         input$file1
         input$plotType
+        input$plotScatterBoxOrHeatmap
+        
+        mychoices     <- if (exists("htm")) as.list( c( unique( htm[[input$colBatch]] ) ) ) else NULL
+        mychoices_all <- if (exists("htm")) as.list( c( "All batches", unique( htm[[input$colBatch]] ) ) ) else NULL
         
         if( is.null( input$colBatch ) )
         {
@@ -181,26 +251,29 @@ shinyServer(function(input, output){
         }
         else if( input$plotType == "Heatmap" )
         {
-          selectInput("batch", "Show this batch:", as.list( c( unique( htm[[input$colBatch]] ) ) ) ) 
+          selectInput("batch", "Show this batch:", mychoices ) 
         }
         else
         {
-          selectInput("batch", "Show this batch:", as.list( c( "All batches", unique( htm[[input$colBatch]] ) ) ) )
+          selectInput("batch", "Show this batch:", mychoices_all )
         }
     })
     
-    observeEvent(input$plotType,{
+    observeEvent(c(input$file1, input$buttonSessionLoad, input$plotType),{
 
+        mychoices_allcols          <- if (exists("htm")) as.list(names(htm)) else NULL
+        mychoices_allcols_none     <- if (exists("htm")) as.list(c("None", names(htm))) else NULL
+        
         # Display plot control widgets depending on which plot type is selected
         switch(input$plotType,
             "Scatter plot" = {
-                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "X axis:", choices = as.list(names(htm)), width = "200%"))
-                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Y axis:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "X axis:", choices = mychoices_allcols, width = "200%"))
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Y axis:", choices = mychoices_allcols, width = "200%"))
                 
                 output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross")))
                 
-                output$UIPointplotsplitBy      <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
-                output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = as.list(c("None", names(htm))), width = "100%"))
+                output$UIPointplotsplitBy      <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = mychoices_allcols_none))
+                output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = mychoices_allcols_none, width = "100%"))
                 output$UIPointplotfilterValues <- renderUI(
                   if ( is.null( input$PointplotfilterColumn ) )
                   {
@@ -208,7 +281,8 @@ shinyServer(function(input, output){
                   }
                   else
                   {
-                    selectInput("PointplotfilterValues", "Matches:", choices = as.list(c("All", htm[[input$PointplotfilterColumn]])), width = "100%", multiple = TRUE)
+                      mychoices_filter_val_point <- if (exists("htm")) as.list(c("All", htm[[input$PointplotfilterColumn]])) else NULL
+                      selectInput("PointplotfilterValues", "Matches:", choices = mychoices_filter_val_point, width = "100%", multiple = TRUE)
                   }
                   )
                 output$UIBoxplothighlightCenter <- renderUI(NULL)
@@ -219,8 +293,8 @@ shinyServer(function(input, output){
                 output$UILUTcolors <- renderUI(NULL)
             },
             "Boxplot"      = {
-                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "Categories:", choices = as.list(names(htm)), width = "200%"))
-                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
+                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "Categories:", choices = mychoices_allcols, width = "200%"))
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = mychoices_allcols, width = "200%"))
                 
                 output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show as cross")))
                 
@@ -229,16 +303,14 @@ shinyServer(function(input, output){
                 output$UIPointplotfilterValues <- renderUI(NULL)
                 
                 output$UIBoxplothighlightCenter <- renderUI(selectInput("BoxplothighlightCenter", "Highlight box center?", choices = list("No", "Mean", "Median")))
-                output$UIBoxplotsplitBy <- renderUI(selectInput("BoxplotsplitBy", "Split plot by", choices = as.list(c("None", names(htm)))))
+                output$UIBoxplotsplitBy <- renderUI(selectInput("BoxplotsplitBy", "Split plot by", choices = mychoices_allcols_none))
                 
                 output$UILUTminmax <- renderUI(NULL)
                 output$UILUTcolors <- renderUI(NULL)
             },
             "Heatmap"      = {
                 output$UIselectXaxis <- renderUI(NULL)
-                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = as.list(names(htm)), width = "200%"))
-                
-                output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross")))
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = mychoices_allcols, width = "200%"))
                 
                 output$UIPointplotsplitBy       <- renderUI(NULL)
                 output$UIPointplotfilterColumn  <- renderUI(NULL)
@@ -247,12 +319,31 @@ shinyServer(function(input, output){
                 output$UIBoxplothighlightCenter <- renderUI(NULL)
                 output$UIBoxplotsplitBy         <- renderUI(NULL)
                 
-                output$UILUTcolors <- renderUI( selectInput("LUTcolors", "LUT colors", choices = c("Red-White-Green", "Blue-White-Red"), width = "100%"))
-         
-                output$UILUTminmax <- renderUI({
-                    Ymin <- min(htm[[input$Yaxis]], na.rm = TRUE)
-                    Ymax <- max(htm[[input$Yaxis]], na.rm = TRUE)
+                output$UILUTminmax              <- renderUI({
+                    # Do not show LUT adjustments if a dataset is not loaded
+                    Ymin <- if (exists("htm")) min(htm[[input$Yaxis]], na.rm = TRUE) else 0
+                    Ymax <- if (exists("htm")) max(htm[[input$Yaxis]], na.rm = TRUE) else 0
+                    
+                    # Do not show LUT adjustments if the user selects a non-numerical column
+                    if(!is.numeric(Ymin) | !is.numeric(Ymax)) return(NULL)
+                    
                     sliderInput("LUTminmax", "LUT adjustment", min = Ymin, max = Ymax, value = c(Ymin, Ymax), width = "100%")
+                })
+                
+                output$UILUTcolors              <- renderUI({
+                    
+                    # Do not show LUT colors if the user selects a non-numerical column
+                    if(is.null(input$LUTminmax)) return(NULL)
+                    
+                    selectInput("LUTcolors", "LUT colors", choices = c("Red-White-Green", "Blue-White-Red"), width = "100%")
+                })
+                
+                output$UIhighlightQCfailed      <- renderUI({
+                    
+                    # Do not show LUT colors if the user selects a non-numerical column
+                    if(is.null(input$LUTminmax)) return(NULL)
+                    
+                    selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross"))
                 })
                 
             }
@@ -301,7 +392,7 @@ shinyServer(function(input, output){
     output$plot <- renderPlotly({
         
         input$plotScatterBoxOrHeatmap
-        
+
         isolate({
           
             if( ! is.null( input$batch ) )
@@ -351,7 +442,7 @@ shinyServer(function(input, output){
               ggplotly( ggplot() ) 
             }
          
-          }) # isolate
+          })
       
     })
     
@@ -363,7 +454,15 @@ shinyServer(function(input, output){
     approvedExperiments   <- reactive({
         input$QCAddfailedExperiments
         input$QCcheckGroup
-        unique(as.character(htm[[input$colBatch]]))[!(unique(as.character(htm[[input$colBatch]])) %in% as.character(QCsettings[QCsettings$type == "Failed experiment","minimum"]))]
+        
+        if(exists("htm")){
+            return(
+                unique(as.character(htm[[input$colBatch]]))[!(unique(as.character(htm[[input$colBatch]])) %in% as.character(QCsettings[QCsettings$type == "Failed experiment","minimum"]))]
+            )
+        } else{
+            return(NULL)
+        }
+        
     })
     
     output$UIQCfailedExperiments <- renderUI({
@@ -392,9 +491,11 @@ shinyServer(function(input, output){
         input$file1
         input$applyNorm
         
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+        
         fluidRow(
             column(6,
-                selectInput("QCnumMeasurement", "Number-based QC:", as.list(names(htm)), width = "200%")
+                selectInput("QCnumMeasurement", "Number-based QC:", mychoices, width = "200%")
             ),
             column(2,
                 numericInput("QCnumMin", "Minimum:", value=1)
@@ -412,9 +513,11 @@ shinyServer(function(input, output){
         input$file1
         input$applyNorm
         
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+        
         fluidRow(
             column(6,
-                   selectInput("QCtxtMeasurement", "Failed images (text-based):", as.list(names(htm)), width = "200%")
+                   selectInput("QCtxtMeasurement", "Failed images (text-based):", mychoices, width = "200%")
             ),
             column(2,
                    textInput("QCtxtBad", "Value:")
@@ -429,6 +532,9 @@ shinyServer(function(input, output){
         )
     })
 
+    observeEvent(input$buttonSessionLoad,{
+        output$QCtable    <- renderTable(QCsettings[,1:4])
+    })
     observeEvent(input$QCAddfailedExperiments,{
         temp <- data.frame(
             type        = "Failed experiment",
@@ -528,6 +634,7 @@ shinyServer(function(input, output){
                 echo("  Total measurements: ", nrow(htm))
                 echo("")
                 echo("The column ", col_QC, " has been updated.")
+                echo("The updated data table can be viewed in 'More > View table'.")
                 
             } else{
                 
@@ -638,7 +745,9 @@ shinyServer(function(input, output){
         input$file1
         input$applySummary
         
-        selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), width = "100%", multiple = FALSE)
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+        
+        selectInput("NormFeatures", "Data features to be analyzed", choices = mychoices, width = "100%", multiple = FALSE)
     })
     
     output$UINormDataTransform <- renderUI({
@@ -693,7 +802,9 @@ shinyServer(function(input, output){
     output$UINormNegCtrl       <- renderUI({
         input$file1
         
-        selectInput("NormNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))), width = "100%")
+        mychoices <- if (exists("htm")) as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))) else NULL
+        
+        selectInput("NormNegCtrl", "Negative control", choices = mychoices, width = "100%")
     })
     
     observeEvent(input$applyNorm,{
@@ -728,26 +839,34 @@ shinyServer(function(input, output){
         input$file1
         input$applyNorm
         
-        selectInput("SummaryMeasurements", "Measurements to be analyzed", choices = as.list(names(htm)), width = "100%", multiple = TRUE)
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+        
+        selectInput("SummaryMeasurements", "Measurements to be analyzed", choices = mychoices, width = "100%", multiple = TRUE)
     })
     output$UISummaryNegCtrl      <- renderUI({
         input$file1
         input$applyNorm
         input$NormNegCtrl
         
-        selectInput("SummaryNegCtrl", "Negative control", choices = as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))), width = "100%")
+        mychoices <- if (exists("htm")) as.list(c("None selected", "All treatments", sort(htm[[input$colTreatment]]))) else NULL
+        
+        selectInput("SummaryNegCtrl", "Negative control", choices = mychoices, width = "100%")
     })
     output$UISummaryPosCtrl      <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("SummaryPosCtrl", "Positive control", choices = as.list(c("None selected", sort(htm[[input$colTreatment]]))), width = "100%")
+        mychoices <- if (exists("htm")) as.list(c("None selected", sort(htm[[input$colTreatment]]))) else NULL
+        
+        selectInput("SummaryPosCtrl", "Positive control", choices = mychoices, width = "100%")
     })
     output$UISummaryNumObjects   <- renderUI({
         input$file1
         input$applyNorm
         
-        selectInput("SummaryNumObjects", "Number of objects per image", choices = as.list(names(htm)), width = "100%")
+        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
+        
+        selectInput("SummaryNumObjects", "Number of objects per image", choices = mychoices, width = "100%")
     })
     
     observeEvent(input$SummaryMeasurements,{
@@ -812,7 +931,7 @@ shinyServer(function(input, output){
     
     
     ################################################################
-    # 6. SAVE & LOAD SESSION                                       #
+    # SAVE & LOAD SESSION                                          #
     ################################################################
     
     # Keep track of the state of all items in the UI
@@ -873,7 +992,6 @@ shinyServer(function(input, output){
                  choices  = "NOT SUPPORTED",
                  selected = input$prefixFile,
                  comment  = ""),
-            
             list(type     = "input",
                  name     = "colObjectPosX",
                  choices  = "NOT SUPPORTED",
@@ -918,6 +1036,66 @@ shinyServer(function(input, output){
                  name     = "squaresize",
                  choices  = "NOT SUPPORTED",
                  selected = input$squaresize,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "plotType",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$plotType,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "batch",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$batch,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "Xaxis",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$Xaxis,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "Yaxis",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$Yaxis,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "highlightQCfailed",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$highlightQCfailed,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "PointplotsplitBy",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$PointplotsplitBy,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "PointplotfilterColumn",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$PointplotfilterColumn,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "PointplotfilterValues",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$PointplotfilterValues,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "BoxplothighlightCenter",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$BoxplothighlightCenter,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "BoxplotsplitBy",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$BoxplotsplitBy,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "LUTcolors",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$LUTcolors,
+                 comment  = ""),
+            list(type     = "input",
+                 name     = "LUTminmax",
+                 choices  = "NOT SUPPORTED",
+                 selected = input$LUTminmax,
                  comment  = ""),
             list(type     = "input",
                  name     = "NormFeatures",
@@ -1016,14 +1194,15 @@ shinyServer(function(input, output){
 
             # Clean work environment
             echo("* Resetting session")
-            if(exists("htm"))         rm(htm)
-            if(exists("htm_columns")) rm(htm_columns)
-            if(exists("QCsettings"))  rm(QCsettings)
-            if(exists("UI"))          rm(UI)
+            if(exists("htm"))         rm(htm, inherits = TRUE)
+            if(exists("htm_columns")) rm(htm_columns, inherits = TRUE)
+            if(exists("QCsettings"))  rm(QCsettings, inherits = TRUE)
+            if(exists("UI"))          rm(UI, inherits = TRUE)
 
             # Load R objects
             load(settingsFilePath)
-
+            QCsettings <<- QCsettings
+            
             path_to_htm <- isolate(UI())[[1]]$selected
             
             # Integrity check
@@ -1038,7 +1217,7 @@ shinyServer(function(input, output){
                 htm <- read.HTMtable(path_to_htm)
                 htm <- htm[,setdiff(colnames(htm), colnames(htm_columns))]       # Avoid column duplication
                 htm <- cbind(htm, htm_columns)
-                rm(htm_columns)
+                rm(htm_columns, inherits = TRUE)
                 htm <<- htm
                 
                 echo("* Loading widget settings")
@@ -1109,6 +1288,7 @@ shinyServer(function(input, output){
                 output$UIsquaresize          <- renderUI({
                     sliderInput("squaresize", "Square size", min=0.5, max=5, value=subsetUI(UI, "input", "squaresize"), step=0.5)
                 })
+                # This is where one would restore the plotting settings
                 output$UINormFeatures        <- renderUI({
                     selectInput("NormFeatures", "Data features to be analyzed", choices = as.list(names(htm)), selected = subsetUI(UI, "input", "NormFeatures"), width = "100%", multiple = FALSE)
                 })
@@ -1152,10 +1332,18 @@ shinyServer(function(input, output){
     ################################################################
     # DATA TABLE                                                   #
     ################################################################
-    observeEvent({input$file1
-                  input$buttonSessionLoad
-                  input$applyNorm
-                  input$update_dataTable}, {
-        output$valuestable <- renderDataTable(htm)
+    observeEvent(c(input$file1, input$buttonSessionLoad, input$applyQC, input$applyNorm, input$applySummary, input$update_dataTable), {
+
+        if(exists("htm")){
+            output$UIValuesTable <- renderUI({
+                output$valuestable <- renderDataTable(htm)
+                dataTableOutput("valuestable")
+            })
+        } else{
+            output$UIValuesTable <- renderUI(
+                tagList(br(), p("Nothing to show here: there is no data table currently loaded."))
+            )
+        }
+ 
     })
 })

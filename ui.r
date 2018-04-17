@@ -194,9 +194,10 @@ shinyUI(navbarPage("shinyHTM",
     navbarMenu("More",
                
         tabPanel("View table",
-            actionButton("update_dataTable", "Update table", icon = icon("refresh"), style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
-            br(),
-            dataTableOutput("valuestable")
+            #actionButton("update_dataTable", "Update table", icon = icon("refresh"), style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+            #br(),
+            #dataTableOutput("ValuesTable")
+            uiOutput("UIValuesTable")
         ),
         
         tabPanel("Save & Load settings",
