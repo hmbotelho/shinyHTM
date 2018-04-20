@@ -152,7 +152,6 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
 
     
     # Define the plot type (scatter vs jitter) depending on the data types
-    # TODO: only jitter along non-numeric
     g <- if( is.numeric( df[[x]] ) & is.numeric( df[[y]] ) )
     {
         g + geom_point( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
@@ -160,7 +159,22 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
     } 
     else
     {
-        g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
+        # g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
+        jitteramount = 0.2
+        
+        # Jitter non-numerical axis
+        if(class(df[[x]]) %in% c("integer", "numeric")){
+            jitterX <- 0
+        } else{
+            jitterX <- jitteramount  
+        }
+        if(class(df[[y]]) %in% c("integer", "numeric")){
+            jitterY <- 0
+        } else{
+            jitterY <- jitteramount  
+        }
+        
+        g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ), position = position_jitter(w = jitterX, h = jitterY))
     }
 
     # Customize plot
