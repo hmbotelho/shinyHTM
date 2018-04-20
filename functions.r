@@ -141,7 +141,7 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
     g <- ggplot(df, aes_string(x, y)) + ggtitle( batch ) + scale_colour_gradient2()
 
     # Assign symbol to be used at each data point
-    symbols <- if( highlightQCfailed == "Show as cross" )
+    symbols <- if( highlightQCfailed == "Show with cross" )
     {
       sapply( df[[col_QC]], function(x) ifelse( x, plotSymbols["approved"], plotSymbols["rejected"] ) )
     } 
@@ -241,9 +241,9 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
                       text = sprintf("%s: %s<br>Treatment: %s<br>Batch: %s", measurement, df[[measurement]], df[[colTreatment]], df[[colBatch]])
                      ) 
                  )
-    
+
     # Calculate the symbol to be used at each data point
-    symbols <- if( highlightQCfailed == "Show as cross")
+    symbols <- if( highlightQCfailed == "Show with cross")
     {
       sapply( df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
     } 
