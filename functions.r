@@ -182,6 +182,14 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
     {
         g + geom_point( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
         
+        # If the data was subsampled, color data points accordingly
+        if("HTM_color" %in% names(df))
+        {
+            col <- df$HTM_color
+            names(col) <- col
+            g <- g + geom_point(aes(color = HTM_color)) + scale_color_manual(values=col) + theme(legend.position="none")
+        }
+        
     } 
     else
     {
@@ -201,17 +209,17 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
         }
         
         g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ), position = position_jitter(w = jitterX, h = jitterY))
+        
+        # If the data was subsampled, color data points accordingly
+        if("HTM_color" %in% names(df))
+        {
+            col <- df$HTM_color
+            names(col) <- col
+            g <- g + geom_point(aes(color = HTM_color)) + scale_color_manual(values=col) + theme(legend.position="none")
+        }
     }
     
-    # If the data was subsampled, color data points accordingly
-
-    if("HTM_color" %in% names(df)){
-        
-        col <- df$HTM_color
-        names(col) <- col
-        
-        g <- g + geom_point(aes(color = HTM_color)) + scale_color_manual(values=col) + theme(legend.position="none")
-    }
+    
     
     
     
