@@ -274,6 +274,19 @@ shinyServer(function(input, output){
                 
                 output$UIPointplotsplitBy      <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = mychoices_allcols_none))
                 output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = mychoices_allcols_none, width = "100%"))
+                
+                output$UIPointplotSubsample    <- renderUI(checkboxInput("PointplotSubsample", label = "Subsample data?", value = FALSE))
+                output$UIPointplotSubsampleN   <- renderUI(if(input$PointplotSubsample){
+                    numericInput("PointplotSubsampleN", label = "Plot every Nth data point (black dots)", value = 10, min = 1, max = nrow(htm))
+                }else{
+                    NULL
+                })
+                output$UIPointplotSubsampleM   <- renderUI(if(input$PointplotSubsample){
+                    numericInput("PointplotSubsampleM", label = "Show the M lowest and highest values (red dots)", value = 10, min = 1, max = floor(nrow(htm)/2))
+                }else{
+                    NULL
+                })
+                
                 output$UIPointplotfilterValues <- renderUI(
                   if ( is.null( input$PointplotfilterColumn ) )
                   {
@@ -300,6 +313,9 @@ shinyServer(function(input, output){
                 
                 output$UIPointplotsplitBy      <- renderUI(NULL)
                 output$UIPointplotfilterColumn <- renderUI(NULL)
+                output$UIPointplotSubsample    <- renderUI(NULL)
+                output$UIPointplotSubsampleN   <- renderUI(NULL)
+                output$UIPointplotSubsampleM   <- renderUI(NULL)
                 output$UIPointplotfilterValues <- renderUI(NULL)
                 
                 output$UIBoxplothighlightCenter <- renderUI(selectInput("BoxplothighlightCenter", "Highlight box center?", choices = list("No", "Mean", "Median")))
@@ -314,6 +330,9 @@ shinyServer(function(input, output){
                 
                 output$UIPointplotsplitBy       <- renderUI(NULL)
                 output$UIPointplotfilterColumn  <- renderUI(NULL)
+                output$UIPointplotSubsample     <- renderUI(NULL)
+                output$UIPointplotSubsampleN    <- renderUI(NULL)
+                output$UIPointplotSubsampleM    <- renderUI(NULL)
                 output$UIPointplotfilterValues  <- renderUI(NULL)
                 
                 output$UIBoxplothighlightCenter <- renderUI(NULL)
@@ -373,14 +392,18 @@ shinyServer(function(input, output){
       input$plotScatterBoxOrHeatmap
       
       isolate({
-        
-        filterDataFrame( df = htm, 
-                       batch_col = input$colBatch, 
-                       batch = input$batch, 
-                       highlightQCfailed = input$highlightQCfailed, 
-                       filterByColumn = input$PointplotfilterColumn,  
-                       whichValues = input$PointplotfilterValues, 
-                       col_QC = col_QC)
+
+        filterDataFrame(df                = htm, 
+                        y_col             = input$Yaxis,
+                        batch_col         = input$colBatch, 
+                        batch             = input$batch, 
+                        highlightQCfailed = input$highlightQCfailed, 
+                        filterByColumn    = input$PointplotfilterColumn,  
+                        whichValues       = input$PointplotfilterValues, 
+                        col_QC            = col_QC,
+                        subsampledata     = ifelse(is.null(input$PointplotSubsample), FALSE, input$PointplotSubsample),
+                        subsampleN        = ifelse(is.null(input$PointplotSubsample) | is.null(input$PointplotSubsampleN), NULL, input$PointplotSubsampleN),
+                        extremevalues     = ifelse(is.null(input$PointplotSubsample) | is.null(input$PointplotSubsampleM), NULL, input$PointplotSubsampleM))
         
       }) # isolate
       

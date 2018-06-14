@@ -86,6 +86,10 @@ shinyUI(navbarPage("shinyHTM",
                 # Scatter plot customization options
                 uiOutput("UIPointplotsplitBy"),
                 br(),
+                uiOutput("UIPointplotSubsample"),
+                uiOutput("UIPointplotSubsampleN"),
+                uiOutput("UIPointplotSubsampleM"),
+                br(),
                 fluidRow(
                     column(6, uiOutput("UIPointplotfilterColumn")),
                     column(6, uiOutput("UIPointplotfilterValues"))
