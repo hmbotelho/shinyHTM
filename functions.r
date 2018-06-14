@@ -159,7 +159,7 @@ subsetUI <- function(LS, type = "input", name = "", field = "selected"){
 
 # Generate Plotly scatter/jitter plot
 pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", colTreatment, colBatch ){
- 
+
     # Initialize variables
     plotSymbols <- c( approved = 20, rejected = 4 )
     
@@ -180,7 +180,7 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
     # Define the plot type (scatter vs jitter) depending on the data types
     g <- if( is.numeric( df[[x]] ) & is.numeric( df[[y]] ) )
     {
-        g + geom_point( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
+        g <- g + geom_point( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
         
         # If the data was subsampled, color data points accordingly
         if("HTM_color" %in% names(df))
@@ -189,6 +189,8 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
             names(col) <- col
             g <- g + geom_point(aes(color = HTM_color)) + scale_color_manual(values=col) + theme(legend.position="none")
         }
+        
+        g
         
     } 
     else
@@ -208,7 +210,7 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
             jitterY <- jitteramount  
         }
         
-        g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ), position = position_jitter(w = jitterX, h = jitterY))
+        g <- g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ), position = position_jitter(w = jitterX, h = jitterY))
         
         # If the data was subsampled, color data points accordingly
         if("HTM_color" %in% names(df))
@@ -217,6 +219,8 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
             names(col) <- col
             g <- g + geom_point(aes(color = HTM_color)) + scale_color_manual(values=col) + theme(legend.position="none")
         }
+        
+        g
     }
     
     
