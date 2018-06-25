@@ -763,6 +763,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
             # init columns
             manipulation <- paste0(manipulation,normalisation,"__")
             output = paste0("HTM_norm",manipulation,measurement)
+            output <- gsub(" ", "_", output)
             data[[output]] = NA
             echo("  Output: ",output)
             
