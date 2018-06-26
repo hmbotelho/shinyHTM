@@ -20,6 +20,7 @@ source("./functions.r")
 loadpackage("shiny")
 loadpackage("plotly")
 loadpackage("ggplot2")
+loadpackage("ggbeeswarm")
 loadpackage("tcltk")
 # loadpackage("xlsx")
 loadpackage("shinyjs")
@@ -272,6 +273,7 @@ shinyServer(function(input, output){
                 
                 output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross")))
                 
+                output$UIPointplotsBeeswarm    <- renderUI(checkboxInput("PointplotsBeeswarm", label = "Remove point overlay", value = FALSE))
                 output$UIPointplotsplitBy      <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = mychoices_allcols_none))
                 output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = mychoices_allcols_none, width = "100%"))
                 
@@ -311,6 +313,7 @@ shinyServer(function(input, output){
                 
                 output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show as cross")))
                 
+                output$UIPointplotsBeeswarm    <- renderUI(NULL)
                 output$UIPointplotsplitBy      <- renderUI(NULL)
                 output$UIPointplotfilterColumn <- renderUI(NULL)
                 output$UIPointplotSubsample    <- renderUI(NULL)
@@ -328,6 +331,7 @@ shinyServer(function(input, output){
                 output$UIselectXaxis <- renderUI(NULL)
                 output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = mychoices_allcols, width = "200%"))
                 
+                output$UIPointplotsBeeswarm     <- renderUI(NULL)
                 output$UIPointplotsplitBy       <- renderUI(NULL)
                 output$UIPointplotfilterColumn  <- renderUI(NULL)
                 output$UIPointplotSubsample     <- renderUI(NULL)
@@ -387,7 +391,7 @@ shinyServer(function(input, output){
     })
     
     
-    htmFilteredForCurrentPlot <- reactive({
+    htmFilteredForCurrentPlot <<- reactive({
       
       input$plotScatterBoxOrHeatmap
       
@@ -421,17 +425,18 @@ shinyServer(function(input, output){
             if( ! is.null( input$batch ) )
             {
               switch(input$plotType,
-                 
+                     
                      "Scatter plot" = pointPlot(
                          df =  htmFilteredForCurrentPlot(), 
-                         batch = input$colBatch, 
                          x = input$Xaxis, 
                          y = input$Yaxis, 
                          col_QC = col_QC, 
                          highlightQCfailed = input$highlightQCfailed, 
+                         beeswarm = input$PointplotsBeeswarm,
                          splitBy = input$PointplotsplitBy, 
                          colTreatment = input$colTreatment, 
-                         colBatch = input$colBatch),
+                         colBatch = input$colBatch,
+                         colColors = if("HTM_color" %in% names(htmFilteredForCurrentPlot())) "HTM_color"),
                        
                      "Boxplot"      = boxPlot(
                          df =  htmFilteredForCurrentPlot(), 

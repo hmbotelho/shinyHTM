@@ -84,6 +84,7 @@ shinyUI(navbarPage("shinyHTM",
                 uiOutput("UIhighlightQCfailed"),
                 
                 # Scatter plot customization options
+                uiOutput("UIPointplotsBeeswarm"),
                 uiOutput("UIPointplotsplitBy"),
                 br(),
                 uiOutput("UIPointplotSubsample"),

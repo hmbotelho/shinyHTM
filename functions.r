@@ -158,44 +158,66 @@ subsetUI <- function(LS, type = "input", name = "", field = "selected"){
 }
 
 # Generate Plotly scatter/jitter plot
-pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", colTreatment, colBatch ){
+pointPlot <- function( df, x, y, col_QC, highlightQCfailed, beeswarm = FALSE, splitBy = "None", colTreatment, colBatch, colColors ){
 
     # Initialize variables
     plotSymbols <- c( approved = 20, rejected = 4 )
     
-    # Define the data to be plotted
-    g <- ggplot(df, aes_string(x, y)) + ggtitle( batch ) + scale_colour_gradient2()
-    
     # Assign symbol to be used at each data point
-    symbols <- if( highlightQCfailed == "Show with cross" )
-    {
+    symbols <- if( highlightQCfailed == "Show with cross" ){
         sapply( df[[col_QC]], function(x) ifelse( x, plotSymbols["approved"], plotSymbols["rejected"] ) )
-    } 
-    else
-    {
+    } else{
         plotSymbols["approved"]
     }
     
+    # Initialize colors
+    if(is.null(colColors)){
+        plotColors <- rep("black", nrow(df))
+    } else{
+        plotColors <- df[[colColors]]
+    }
+    names(plotColors) <- plotColors
     
-    # Define the plot type (scatter vs jitter) depending on the data types
-    g <- if( is.numeric( df[[x]] ) & is.numeric( df[[y]] ) )
-    {
-        g <- g + geom_point( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
-        
-        # If the data was subsampled, color data points accordingly
-        if("HTM_color" %in% names(df))
-        {
-            col <- df$HTM_color
-            names(col) <- col
-            g <- g + geom_point(aes(color = HTM_color)) + scale_color_manual(values=col) + theme(legend.position="none")
+
+    
+    
+    # Decide what kind of plot to do: scatter, jitter or beeswarm;
+    plottype <- if(is.numeric( df[[x]] ) & is.numeric( df[[y]] )){
+        "scatter"
+    } else{
+        if(beeswarm){
+            "beeswarm"
+        } else{
+            "jitter"
         }
+    }
+    
+    
+    # Define the data to be plotted
+    g <- ggplot(df, aes_string(x, y)) + ggtitle( colBatch ) + scale_colour_gradient2()
+    
+    
+    # Generate plot object
+    # SCATTER PLOT
+    if(plottype == "scatter"){
         
-        g
+        g <- g + geom_point(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors)) + 
+                 scale_color_manual(values=plotColors) + 
+                 theme(legend.position="none")
         
-    } 
-    else
-    {
-        # g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
+    }
+    
+    # BEESWARM
+    if(plottype == "beeswarm"){
+        
+        g <- g + geom_quasirandom(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors)) + 
+                 scale_color_manual(values=plotColors) + 
+                 theme(legend.position="none")
+    }
+    
+    # JITTER
+    if(plottype == "jitter"){
+        
         jitteramount = 0.2
         
         # Jitter non-numerical axis
@@ -210,22 +232,11 @@ pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "No
             jitterY <- jitteramount  
         }
         
-        g <- g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ), position = position_jitter(w = jitterX, h = jitterY))
+        g <- g + geom_jitter(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors ), position = position_jitter(w = jitterX, h = jitterY)) +
+                 scale_color_manual(values=plotColors) + 
+                 theme(legend.position="none")
         
-        # If the data was subsampled, color data points accordingly
-        if("HTM_color" %in% names(df))
-        {
-            col <- df$HTM_color
-            names(col) <- col
-            g <- g + geom_point(aes(color = HTM_color)) + scale_color_manual(values=col) + theme(legend.position="none")
-        }
-        
-        g
     }
-    
-    
-    
-    
     
     
     # Customize plot
