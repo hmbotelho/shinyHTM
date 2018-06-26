@@ -22,9 +22,10 @@ loadpackage("plotly")
 loadpackage("ggplot2")
 loadpackage("ggbeeswarm")
 loadpackage("tcltk")
-# loadpackage("xlsx")
+loadpackage("openxlsx")
 loadpackage("shinyjs")
 loadpackage("raster")
+loadpackage("shinyalert")
 
 
 # Adjust maximum upload size to 2 Gb
@@ -90,9 +91,23 @@ shinyServer(function(input, output){
                                   stringsAsFactors = FALSE)
 
         # Read new dataset
-        htm <- read.HTMtable(input$file1$datapath)
-        htm[[col_QC]] <- TRUE
-        htm <<- htm
+        htm <- read.HTMtable(input$file1$datapath, filetype = input$loadFileType)
+        
+        # Check if data has been successfully read
+        if(is.null(htm)){
+            if(input$loadFileType == "Auto"){
+                shinyalert("Oops!", "shinyHTM could not read your data file. These are the only file formats supported by shinyHTM: 'csv', 'txt', 'tsv' and 'xlsx'.", type = "error")
+            } else{
+                shinyalert("Oops!", paste0("shinyHTM could not read your data file. Please check whether the file format is '", input$loadFileType, "', as specified in the load options."), type = "error")
+            }
+            
+        } else if(nrow(htm) == 0){
+            shinyalert("Oops!", "It seems like your data file has no data.", type = "warning")
+        } else{
+            htm[[col_QC]] <- TRUE
+            htm <<- htm 
+        }
+
         
         # Reset widgets to their original values
         for(i in widgetnames){
@@ -391,7 +406,7 @@ shinyServer(function(input, output){
     })
     
     
-    htmFilteredForCurrentPlot <<- reactive({
+    htmFilteredForCurrentPlot <- reactive({
       
       input$plotScatterBoxOrHeatmap
       
