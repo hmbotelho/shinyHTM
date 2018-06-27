@@ -23,75 +23,119 @@ echo <- function(...){
 }
 
 
-# Reads a data.frame from csv, tsv, xls and xlsx files. The file format is auto-detected.
-read.HTMtable <- function(filepath){
+# Reads a data.frame from csv, tsv, and xlsx files. Does not read the older xls format.
+# The file format can be explicitly mentioned or auto-detected.
+read.HTMtable <- function(filepath, filetype = c("Auto", "csv", "tsv", "xlsx")){
     # filepath : full path to file. includes the filename. In Windows this is a temporary folder where the file is named '0'
     # filename : original filename
-    # Requires package xlsx
     
-    # tryCatch(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE), 
-    #          error = function(e){
-    #              
-    #              # File not Excel
-    #              if(grepl("\t", readLines(filepath, n = 1))){
-    #                  
-    #                  # Tab-separated file
-    #                  return(read.csv(filepath, sep = "\t", stringsAsFactors = FALSE))
-    #              }
-    #              
-    #              if(grepl(",", readLines(filepath, n = 1))){
-    #                  
-    #                  # Comma-separated file
-    #                  return(read.csv(filepath, sep = ",", stringsAsFactors = FALSE))
-    #              }
-    #              
-    #              # Unknown file type
-    #              warning("Unknown file format. Loading an empty data table.")
-    #              return(data.frame())
-    #              
-    #          },
-    #          finally = function(e){
-    #              
-    #              # Excel file
-    #              return(read.xlsx(filepath, sheetIndex = 1, stringsAsFactors=FALSE))
-    #          }
-    # )
-    return( read.csv(filepath, sep = ",", stringsAsFactors = FALSE) )
+    loadpackage("openxlsx")
+
+    if(filetype == "Auto" | missing(filetype)){
+        
+        tryCatch({
+            temp       <- read.csv(filepath, sep = ",", nrows = 10, stringsAsFactors = FALSE)
+            temp       <- read.table(filepath, sep = "\t", nrows = 10, stringsAsFactors = FALSE)
+            fileheader <- readLines(filepath, n = 1)
+            
+            if(grepl("\t", fileheader)){
+                filetype <- "tsv"
+            } else{
+                filetype <- "csv"
+            }
+        },
+            
+        warning = function(e){
+            filetype <<- "xlsx"
+        })
+    }
+
+    if(filetype == "csv"){
+        tryCatch(
+            return( read.csv(filepath, sep = ",", stringsAsFactors = FALSE) ),
+            error = function(e) filetype == "invalid"
+        )
+    }
+    
+    if(filetype == "tsv"){
+        tryCatch(
+            return( read.table(filepath, sep = "\t", stringsAsFactors = FALSE) ),
+            error = function(e) filetype == "invalid"
+        )
+    }
+    
+    if(filetype == "xlsx"){
+        tryCatch(
+            return( read.xlsx(filepath) ),
+            error = function(e) filetype == "invalid"
+        )
+    }
+    
+    if(filetype == "invalid"){
+        return( NULL )
+    }
+    
 }
 
-filterDataFrame <- function( df, batch_col, batch, highlightQCfailed, filterByColumn, whichValues, col_QC ){
-  # Subset batches
-  if( ! is.null( batch_col ) & ! is.null( batch ) ) {
-    if ( batch != "All batches" ) {
-      df <- df[ df[[batch_col]] == batch, ]
+filterDataFrame <- function( df, y_col, batch_col, batch, highlightQCfailed, filterByColumn, whichValues, col_QC, subsampledata = FALSE, subsampleN = 10, extremevalues = 10){
+    # Subset batches
+    if( ! is.null( batch_col ) & ! is.null( batch ) ) {
+        if ( batch != "All batches" ) {
+            df <- df[ df[[batch_col]] == batch, ]
+        }
     }
-  }
-
-  # Subset by columns
-  if( !is.null( whichValues) & !is.null(filterByColumn) )
-  {
-    if( filterByColumn != "None" ) {
-      if( !("All" %in% whichValues)  ) {
-        OKrows <- sapply( df[[ filterByColumn ]], function(x)
-        {
-          x %in% whichValues
-        })
-        df <- df[OKrows,]
-      }
-    }    
-  }
-  
-  # Hide rejected data points if requested
-  if( !is.null( highlightQCfailed) & !is.null(col_QC) )
-  {
-    if( highlightQCfailed == "Don't show" )
+    
+    # Subset by columns
+    if( !is.null( whichValues) & !is.null(filterByColumn) )
     {
-      df <- df[df[[col_QC]],]
+        if( filterByColumn != "None" ) {
+            if( !("All" %in% whichValues)  ) {
+                OKrows <- sapply( df[[ filterByColumn ]], function(x)
+                {
+                    x %in% whichValues
+                })
+                df <- df[OKrows,]
+            }
+        }    
     }
-  }
-  
-  return(df)
-  
+    
+    # Hide rejected data points if requested
+    if( !is.null( highlightQCfailed) & !is.null(col_QC) )
+    {
+        if( highlightQCfailed == "Don't show" )
+        {
+            df <- df[df[[col_QC]],]
+        }
+    }
+    
+    # Subsample data frame
+    if(subsampledata){
+        
+        allvalues <- data.frame(x                = 1:nrow(htm),
+                                values           = htm[[y_col]],
+                                stringsAsFactors = FALSE)
+        
+        allvalues_numeric <- allvalues[!is.na(allvalues$values),]
+        allvalues_numeric <- allvalues_numeric[order(allvalues_numeric$values, decreasing = TRUE),]
+            
+        # Row numbers of top and bottom M values
+        rows_top    <- head(allvalues_numeric$x, n = extremevalues)
+        rows_bottom <- tail(allvalues_numeric$x, n = extremevalues)
+        
+        # Row numbers of values which are not the top or bottom ones
+        rows_others <- setdiff(allvalues$x, c(rows_top, rows_bottom))
+        
+        # Row numbers of each Nth row
+        rows_sampled <- rows_others[seq(from = 1, to = length(rows_others), by = subsampleN)]
+        
+        df <- df[c(rows_top, rows_sampled, rows_bottom),]
+        df$HTM_color <- c(rep("red", extremevalues),
+                          rep("black", length(rows_sampled)),
+                          rep("red", extremevalues))
+    }
+
+    return(df)
+    
 }
 
 # Convenience function which simplifies subsetting the UI list
@@ -132,51 +176,101 @@ subsetUI <- function(LS, type = "input", name = "", field = "selected"){
 }
 
 # Generate Plotly scatter/jitter plot
-pointPlot <- function( df, batch, x, y, col_QC, highlightQCfailed, splitBy = "None", colTreatment, colBatch ){
-  
+pointPlot <- function( df, x, y, col_QC, highlightQCfailed, beeswarm = FALSE, splitBy = "None", colTreatment, colBatch, colColors ){
+
     # Initialize variables
     plotSymbols <- c( approved = 20, rejected = 4 )
-  
-    # Define the data to be plotted
-    g <- ggplot(df, aes_string(x, y)) + ggtitle( batch ) + scale_colour_gradient2()
-
+    
     # Assign symbol to be used at each data point
-    symbols <- if( highlightQCfailed == "Show as cross" )
-    {
-      sapply( df[[col_QC]], function(x) ifelse( x, plotSymbols["approved"], plotSymbols["rejected"] ) )
-    } 
-    else
-    {
-      plotSymbols["approved"]
+    symbols <- if( highlightQCfailed == "Show with cross" ){
+        sapply( df[[col_QC]], function(x) ifelse( x, plotSymbols["approved"], plotSymbols["rejected"] ) )
+    } else{
+        plotSymbols["approved"]
     }
+    
+    # Initialize colors
+    if(is.null(colColors)){
+        plotColors <- rep("black", nrow(df))
+    } else{
+        plotColors <- df[[colColors]]
+    }
+    names(plotColors) <- plotColors
+    
 
     
-    # Define the plot type (scatter vs jitter) depending on the data types
-    # TODO: only jitter along non-numeric
-    g <- if( is.numeric( df[[x]] ) & is.numeric( df[[y]] ) )
-    {
-        g + geom_point( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
-      
-    } 
-    else
-    {
-        g + geom_jitter( shape = symbols, aes( text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]) ) )
+    
+    # Decide what kind of plot to do: scatter, jitter or beeswarm;
+    plottype <- if(is.numeric( df[[x]] ) & is.numeric( df[[y]] )){
+        "scatter"
+    } else{
+        if(beeswarm){
+            "beeswarm"
+        } else{
+            "jitter"
+        }
     }
-
+    
+    
+    # Define the data to be plotted
+    g <- ggplot(df, aes_string(x, y)) + ggtitle( colBatch ) + scale_colour_gradient2()
+    
+    
+    # Generate plot object
+    # SCATTER PLOT
+    if(plottype == "scatter"){
+        
+        g <- g + geom_point(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors)) + 
+                 scale_color_manual(values=plotColors) + 
+                 theme(legend.position="none")
+        
+    }
+    
+    # BEESWARM
+    if(plottype == "beeswarm"){
+        
+        g <- g + geom_quasirandom(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors)) + 
+                 scale_color_manual(values=plotColors) + 
+                 theme(legend.position="none")
+    }
+    
+    # JITTER
+    if(plottype == "jitter"){
+        
+        jitteramount = 0.2
+        
+        # Jitter non-numerical axis
+        if(class(df[[x]]) %in% c("integer", "numeric")){
+            jitterX <- 0
+        } else{
+            jitterX <- jitteramount  
+        }
+        if(class(df[[y]]) %in% c("integer", "numeric")){
+            jitterY <- 0
+        } else{
+            jitterY <- jitteramount  
+        }
+        
+        g <- g + geom_jitter(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors ), position = position_jitter(w = jitterX, h = jitterY)) +
+                 scale_color_manual(values=plotColors) + 
+                 theme(legend.position="none")
+        
+    }
+    
+    
     # Customize plot
     if(splitBy != "None"){
         g <- g + 
             facet_grid( as.formula(paste("~", splitBy)), scales = "free_x" ) + 
             theme( strip.text.x = element_text( angle = 90 ) )
     }
-
+    
     # Output finished plot
     ggplotly( g )
 }
 
 # Generate Plotly boxplot
 boxPlot <- function(df, batch, x, y, col_QC, highlightCenter = "No", splitBy = "None", colTreatment, colBatch  ){
-
+    
     # Make plot
     g <- ggplot(df, aes_string(x, y))
     g <- g + geom_boxplot() + ggtitle( batch )
@@ -190,29 +284,29 @@ boxPlot <- function(df, batch, x, y, col_QC, highlightCenter = "No", splitBy = "
     }
     if(splitBy != "None"){
         g <- g + 
-        facet_grid(as.formula(paste("~", splitBy)), scales = "free_x") + 
-        theme(strip.text.x = element_text(angle = 90))
+            facet_grid(as.formula(paste("~", splitBy)), scales = "free_x") + 
+            theme(strip.text.x = element_text(angle = 90))
     }
-        
+    
     # Output finished plot
     ggplotly(g)
 }
 
 # Generate Plotly heatmap
 heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf, lutColors = "Blue-White-Red", colTreatment, colBatch ){
-
+    
     # Initialize variables
     plotSymbols <- c(approved = 15, rejected = 4)
     
     if ( lutColors == "Blue-White-Red" )
     {
-      colorGrad   <- c("blue", "white", "red")
+        colorGrad   <- c("blue", "white", "red")
     }
     else if ( lutColors == "Red-White-Green" )
     {
-      colorGrad   <- c("red2", "white", "green4")
+        colorGrad   <- c("red2", "white", "green4")
     }
-  
+    
     # Column 'LUT' has numeric values which are solely used for the color lookup table
     df$LUT <- sapply(df[[measurement]], function(f){
         if(is.na(f)) return(f)
@@ -225,17 +319,17 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
     g <- ggplot( df, 
                  aes( heatX, heatY, color = LUT, 
                       text = sprintf("%s: %s<br>Treatment: %s<br>Batch: %s", measurement, df[[measurement]], df[[colTreatment]], df[[colBatch]])
-                     ) 
-                 )
+                 ) 
+    )
     
     # Calculate the symbol to be used at each data point
-    symbols <- if( highlightQCfailed == "Show as cross")
+    symbols <- if( highlightQCfailed == "Show with cross")
     {
-      sapply( df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
+        sapply( df[[col_QC]], function(x) ifelse(x, plotSymbols["approved"], plotSymbols["rejected"]))
     } 
     else
     {
-      plotSymbols["approved"]
+        plotSymbols["approved"]
     }
     
     
@@ -257,13 +351,13 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
 # Can open multiple files at once
 # filePath is an array of character strings
 OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe", x, y, z )
-  {
-  
+{
+    
     num_images = length( directories );  
-  
+    
     import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\");";
     open_image_template = "IJ.open(\"DIRECTORY/FILENAME\");";
-
+    
     # init
     commands <- "import ij.IJ;\n"
     commands <- paste0( commands, "import ij.ImagePlus;", "\n" );
@@ -272,41 +366,41 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     # Generate the expression opening each image
     for ( i in seq(1, num_images) )
     {
-      if( grepl("\\?", filenames[ i ] ) )
-      {
-        # directory
-        import_image_sequence_reg_exp <- sub( "DIRECTORY", directories[ i ], import_image_sequence_reg_exp_template, fixed = TRUE )
+        if( grepl("\\?", filenames[ i ] ) )
+        {
+            # directory
+            import_image_sequence_reg_exp <- sub( "DIRECTORY", directories[ i ], import_image_sequence_reg_exp_template, fixed = TRUE )
+            
+            # filename / regexp
+            reg_exp = gsub( "\\", "\\\\", filenames[ i ], fixed = TRUE )
+            import_image_sequence_reg_exp <- sub( "REGEXP", reg_exp, import_image_sequence_reg_exp, fixed = TRUE )
+            
+            commands <- paste0( commands, import_image_sequence_reg_exp, "\n" );
+        }
+        else
+        {
+            open_image = sub( "DIRECTORY", directories[ i ], open_image_template, fixed = TRUE )
+            open_image = sub( "FILENAME", filenames[ i ], open_image, fixed = TRUE )
+            commands <- paste0( commands, open_image, "\n" )
+        }
         
-        # filename / regexp
-        reg_exp = gsub( "\\", "\\\\", filenames[ i ], fixed = TRUE )
-        import_image_sequence_reg_exp <- sub( "REGEXP", reg_exp, import_image_sequence_reg_exp, fixed = TRUE )
+        if ( grepl( "LabelMask", filenames[ i ], ignore.case = TRUE ) )
+        {
+            set_label_mask_lut = "IJ.run(\"glasbey inverted\", \"\");";
+            commands <- paste0( commands, set_label_mask_lut, "\n" )
+            # IJ.run("16-bit", "");
+        }
         
-        commands <- paste0( commands, import_image_sequence_reg_exp, "\n" );
-      }
-      else
-      {
-        open_image = sub( "DIRECTORY", directories[ i ], open_image_template, fixed = TRUE )
-        open_image = sub( "FILENAME", filenames[ i ], open_image, fixed = TRUE )
-        commands <- paste0( commands, open_image, "\n" )
-      }
-      
-      if ( grepl( "LabelMask", filenames[ i ], ignore.case = TRUE ) )
-      {
-        set_label_mask_lut = "IJ.run(\"glasbey inverted\", \"\");";
-        commands <- paste0( commands, set_label_mask_lut, "\n" )
-        # IJ.run("16-bit", "");
-      }
-      
-      get_imp = paste0( "ImagePlus imp", i, " = IJ.getImage(); ");
-      commands <- paste0( commands, get_imp, "\n" )
-      
+        get_imp = paste0( "ImagePlus imp", i, " = IJ.getImage(); ");
+        commands <- paste0( commands, get_imp, "\n" )
+        
     }
     
     if ( num_images == 2 )
     {
-      merge_channels = "IJ.run(imp1, \"Merge Channels...\", \"c1=\"+imp1.getTitle()+\" c2=\"+imp2.getTitle()+\" create\");"
-      commands <- paste0( commands, merge_channels, "\n" )
-      commands <- paste0( commands, "IJ.wait( 100 );", "\n" ) # needs time to build the composite image
+        merge_channels = "IJ.run(imp1, \"Merge Channels...\", \"c1=\"+imp1.getTitle()+\" c2=\"+imp2.getTitle()+\" create\");"
+        commands <- paste0( commands, merge_channels, "\n" )
+        commands <- paste0( commands, "IJ.wait( 100 );", "\n" ) # needs time to build the composite image
     }
     
     #
@@ -316,20 +410,20 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     # set slice
     if ( ! is.null( z ) &&  z != "NA" )
     { 
-      setSlice = paste0( "IJ.getImage().setPosition( 1 ,", ceiling( z ) ,", 1);" )
-      commands <- paste0( commands, setSlice, "\n" );
+        setSlice = paste0( "IJ.getImage().setPosition( 1 ,", ceiling( z ) ,", 1);" )
+        commands <- paste0( commands, setSlice, "\n" );
     }
-
+    
     # put ROI at object location
     if (! is.null( x ) && ! is.null( y ) && ( x != "NA" ) && ( y != "NA" ) )
     { 
-      diameter = 50;
-      x <- x - 25;
-      y <- y - 25;
-      setRoi = paste0( "IJ.getImage().setRoi( new OvalRoi(", x, "," , y, ",",diameter,",",diameter,") )");
-      commands <- paste0( commands, setRoi, "\n" );
-      addAsOverlay = paste0( "IJ.run (IJ.getImage(), \"Add Selection...\", \"\")" );
-      commands <- paste0( commands, addAsOverlay, "\n" );
+        diameter = 50;
+        x <- x - 25;
+        y <- y - 25;
+        setRoi = paste0( "IJ.getImage().setRoi( new OvalRoi(", x, "," , y, ",",diameter,",",diameter,") )");
+        commands <- paste0( commands, setRoi, "\n" );
+        addAsOverlay = paste0( "IJ.run (IJ.getImage(), \"Add Selection...\", \"\")" );
+        commands <- paste0( commands, addAsOverlay, "\n" );
     }
     
     #
@@ -408,15 +502,15 @@ generateHeatmapCoordinates <- function(WellX, WellY, PosX, PosY, subposjitter = 
 
 # Creates a 1-batch data.frame with all additional data required for a
 makeHeatmapDataFrame <- function(df, WellX, WellY, PosX, PosY, subposjitter = 0.2, batch_col, batch, col_Well, col_Pos, col_QC = "HTM_QC"){
-
+    
     if(batch == "All batches") return(NULL)
-
+    
     # Subset data frame
     df <- df[df[[batch_col]] == batch,]
-
+    
     # Calculate coordinates for heatmap
     dfCoords <- generateHeatmapCoordinates(WellX, WellY, PosX, PosY, subposjitter)
-
+    
     # Add heatmap coordinates
     for(i in 1:nrow(df)){
         w  <- df[i,col_Well]
@@ -426,7 +520,7 @@ makeHeatmapDataFrame <- function(df, WellX, WellY, PosX, PosY, subposjitter = 0.
         df[i, "heatX"] <- xy[1,"X"]
         df[i, "heatY"] <- xy[1,"Y"]
     }
-  
+    
     df
 }
 
@@ -435,17 +529,17 @@ makeHeatmapDataFrame <- function(df, WellX, WellY, PosX, PosY, subposjitter = 0.
 
 # Apply QC
 applyQC <- function(df, dfQC){
-
-# This an example of how the 'dfQC' data.frame needs to look like
-# 'measurement' is the name of one of the columns in 'df'
-# All values in 'df' are text
-# dfQC <- data.frame(type = c("Numeric QC", "Numeric QC", "Text QC", "Failed experiment"), measurement = c("Count_cell_all", "Count_cell_final", "FileName_PM", "Metadata_platePath"), minimum = c("50", "20", "image1.tif", "myplate_01"), maximum = c("500", "100", "image1.tif", "myplate_01"), stringsAsFactors = FALSE)
-
+    
+    # This an example of how the 'dfQC' data.frame needs to look like
+    # 'measurement' is the name of one of the columns in 'df'
+    # All values in 'df' are text
+    # dfQC <- data.frame(type = c("Numeric QC", "Numeric QC", "Text QC", "Failed experiment"), measurement = c("Count_cell_all", "Count_cell_final", "FileName_PM", "Metadata_platePath"), minimum = c("50", "20", "image1.tif", "myplate_01"), maximum = c("500", "100", "image1.tif", "myplate_01"), stringsAsFactors = FALSE)
+    
     # Make sure the data frame only contains character variables (no factors wanted!)
     dfQC[] <- lapply(dfQC, as.character)
-
+    
     apply(df, 1, function(x){
-
+        
         QCoverall <- NULL
         for(i in 1:nrow(dfQC)){
             
@@ -454,15 +548,15 @@ applyQC <- function(df, dfQC){
                 testvalue <- "NA"}
             if(is.nan(testvalue)){                  # Make sure "NaN" is correctly interpreted
                 testvalue <- "NaN"}
-
+            
             temp <- switch (as.character(dfQC[i,"type"]),
-                "Numeric QC"        = if(is.na(testvalue)){
-                                            FALSE
-                                      } else{
-                                            as.numeric(testvalue) >= as.numeric(dfQC[i, "minimum"]) & as.numeric(testvalue) <= as.numeric(dfQC[i, "maximum"])
-                                      },
-                "Text QC"           = testvalue != dfQC[i, "minimum"],
-                "Failed experiment" = testvalue != dfQC[i, "minimum"]
+                            "Numeric QC"        = if(is.na(testvalue)){
+                                FALSE
+                            } else{
+                                as.numeric(testvalue) >= as.numeric(dfQC[i, "minimum"]) & as.numeric(testvalue) <= as.numeric(dfQC[i, "maximum"])
+                            },
+                            "Text QC"           = testvalue != dfQC[i, "minimum"],
+                            "Failed experiment" = testvalue != dfQC[i, "minimum"]
             )
             
             QCoverall <- c(QCoverall, temp)
@@ -485,12 +579,12 @@ applyQC <- function(df, dfQC){
 #
 
 htmNormalization <- function(data, measurements, col_Experiment, transformation, gradient_correction, normalisation, negcontrol, col_QC, col_Well, col_Treatment, num_WellX, num_WellY) {
-
+    
     echo("*")
     echo("* Data normalization")
     echo("*")
     echo("")
-
+    
     
     # remove previously computed columns
     drops = names(data)[which(grepl("HTM_norm", names(data)))]
@@ -502,8 +596,8 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
     experiments         <- sort(unique(data[[col_Experiment]]))
     gradient_correction <- gsub("-", "_", gradient_correction)        # The dash character '-' is mishandled by the selectInput widgets of shiny
     normalisation       <- gsub("-", "_", normalisation)              # The dash character '-' is mishandled by the selectInput widgets of shiny
-#    transformation      <- transformation
-#    negcontrol          <- negcontrol
+    #    transformation      <- transformation
+    #    negcontrol          <- negcontrol
     
     
     # compute
@@ -623,7 +717,7 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
             for(experiment in experiments) {
                 
                 echo("  Experiment: ", experiment)
-    
+                
                 indices_all <- which((data[[col_Experiment]] == experiment))
                 indices_ok  <- which((data[[col_Experiment]] == experiment) & (data[[col_QC]]) & !is.na(data[[input]]))
                 
@@ -694,10 +788,11 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
             echo("Per batch normalisation:")
             echo("  Method: ", normalisation)
             echo("  Input: ", input)
-
+            
             # init columns
             manipulation <- paste0(manipulation,normalisation,"__")
             output = paste0("HTM_norm",manipulation,measurement)
+            output <- gsub(" ", "_", output)
             data[[output]] = NA
             echo("  Output: ",output)
             
@@ -708,10 +803,10 @@ htmNormalization <- function(data, measurements, col_Experiment, transformation,
                 
                 #print("")
                 #print(paste("  Experiment:",experiment))
-
+                
                 indices_all <- which((data[[col_Experiment]] == experiment))
                 indices_ok  <- which((data[[col_Experiment]] == experiment) & (data[[col_QC]]) & !is.na(data[[input]]))
-
+                
                 if("All treatments" %in% negcontrol) {
                     indices_controls_ok <- indices_ok
                 } else {
@@ -930,7 +1025,7 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
     
     # output
     echo(""); echo("Experiments:")
-              echo(experiments)
+    echo(experiments)
     echo(""); echo("Number of treatments: ", length(treatments))
     echo(""); echo("Negative control: ", negative_ctrl)
     echo(""); echo("Positive control: ", positive_ctrl)
@@ -1222,7 +1317,7 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
             #if ( exp %in% excluded_Experiments ) {
             #    comment = "(Excluded)  " 
             #} else {
-                comment = ""
+            comment = ""
             #}
             
             echo(comment, exp, "; N_neg: ", n_neg, "; N_pos: ", n_pos, "; mean z-score of positive controls: ", round(z_score,3), " ", quality) #,"  t-value: ",t_value))
@@ -1246,10 +1341,10 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
 
 getObjectPositionColumn <- function( names, axis )
 {
-  
-  name = paste0( axis, "Centroid" )
-  if ( name %in% names )   return ( name );
-  
-  return ( "NA" );
-  
+    
+    name = paste0( axis, "Centroid" )
+    if ( name %in% names )   return ( name );
+    
+    return ( "NA" );
+    
 }

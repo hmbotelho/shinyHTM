@@ -9,14 +9,25 @@ shinyUI(navbarPage("shinyHTM",
 
     # Initialize shinyjs
     shinyjs::useShinyjs(),
+    shinyalert::useShinyalert(),
                    
                    
     tabPanel("1. Upload data",
         h2("Upload data"),
         helpText("Upload an image table (must be a comma-separated, tab-sepatated or Excel file)."),
-        fileInput('file1', 'Choose File', accept=c('.csv', '.txt', '.xlsx', '.xls'))
+        fluidRow(
+            column(8,
+                fileInput('file1', 'Choose File', accept=c('.csv', '.txt', '.xlsx'), width = "90%")
+            ),
+            column(4,
+                radioButtons("loadFileType", label = h4("File format"),
+                             choices = list("Auto detect" = "Auto", "Comma separated (csv)" = "csv", "Tab separated (txt)" = "tsv", "Excel (xlsx)" = "xlsx"), 
+                             selected = "Auto")
+            )
+        )
     ),
 
+    
     
     
     tabPanel("2. Configure settings",
@@ -84,7 +95,12 @@ shinyUI(navbarPage("shinyHTM",
                 uiOutput("UIhighlightQCfailed"),
                 
                 # Scatter plot customization options
+                uiOutput("UIPointplotsBeeswarm"),
                 uiOutput("UIPointplotsplitBy"),
+                br(),
+                uiOutput("UIPointplotSubsample"),
+                uiOutput("UIPointplotSubsampleN"),
+                uiOutput("UIPointplotSubsampleM"),
                 br(),
                 fluidRow(
                     column(6, uiOutput("UIPointplotfilterColumn")),

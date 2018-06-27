@@ -20,10 +20,12 @@ source("./functions.r")
 loadpackage("shiny")
 loadpackage("plotly")
 loadpackage("ggplot2")
+loadpackage("ggbeeswarm")
 loadpackage("tcltk")
-# loadpackage("xlsx")
+loadpackage("openxlsx")
 loadpackage("shinyjs")
 loadpackage("raster")
+loadpackage("shinyalert")
 
 
 # Adjust maximum upload size to 2 Gb
@@ -89,9 +91,23 @@ shinyServer(function(input, output){
                                   stringsAsFactors = FALSE)
 
         # Read new dataset
-        htm <- read.HTMtable(input$file1$datapath)
-        htm[[col_QC]] <- TRUE
-        htm <<- htm
+        htm <- read.HTMtable(input$file1$datapath, filetype = input$loadFileType)
+        
+        # Check if data has been successfully read
+        if(is.null(htm)){
+            if(input$loadFileType == "Auto"){
+                shinyalert("Oops!", "shinyHTM could not read your data file. These are the only file formats supported by shinyHTM: 'csv', 'txt', 'tsv' and 'xlsx'.", type = "error")
+            } else{
+                shinyalert("Oops!", paste0("shinyHTM could not read your data file. Please check whether the file format is '", input$loadFileType, "', as specified in the load options."), type = "error")
+            }
+            
+        } else if(nrow(htm) == 0){
+            shinyalert("Oops!", "It seems like your data file has no data.", type = "warning")
+        } else{
+            htm[[col_QC]] <- TRUE
+            htm <<- htm 
+        }
+
         
         # Reset widgets to their original values
         for(i in widgetnames){
@@ -272,8 +288,22 @@ shinyServer(function(input, output){
                 
                 output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross")))
                 
+                output$UIPointplotsBeeswarm    <- renderUI(checkboxInput("PointplotsBeeswarm", label = "Remove point overlay", value = FALSE))
                 output$UIPointplotsplitBy      <- renderUI(selectInput("PointplotsplitBy", "Split plot by", choices = mychoices_allcols_none))
                 output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = mychoices_allcols_none, width = "100%"))
+                
+                output$UIPointplotSubsample    <- renderUI(checkboxInput("PointplotSubsample", label = "Subsample data?", value = FALSE))
+                output$UIPointplotSubsampleN   <- renderUI(if(input$PointplotSubsample){
+                    numericInput("PointplotSubsampleN", label = "Plot every Nth data point (black dots)", value = 10, min = 1, max = nrow(htm))
+                }else{
+                    NULL
+                })
+                output$UIPointplotSubsampleM   <- renderUI(if(input$PointplotSubsample){
+                    numericInput("PointplotSubsampleM", label = "Show the M lowest and highest values (red dots)", value = 10, min = 1, max = floor(nrow(htm)/2))
+                }else{
+                    NULL
+                })
+                
                 output$UIPointplotfilterValues <- renderUI(
                   if ( is.null( input$PointplotfilterColumn ) )
                   {
@@ -298,8 +328,12 @@ shinyServer(function(input, output){
                 
                 output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show as cross")))
                 
+                output$UIPointplotsBeeswarm    <- renderUI(NULL)
                 output$UIPointplotsplitBy      <- renderUI(NULL)
                 output$UIPointplotfilterColumn <- renderUI(NULL)
+                output$UIPointplotSubsample    <- renderUI(NULL)
+                output$UIPointplotSubsampleN   <- renderUI(NULL)
+                output$UIPointplotSubsampleM   <- renderUI(NULL)
                 output$UIPointplotfilterValues <- renderUI(NULL)
                 
                 output$UIBoxplothighlightCenter <- renderUI(selectInput("BoxplothighlightCenter", "Highlight box center?", choices = list("No", "Mean", "Median")))
@@ -312,8 +346,12 @@ shinyServer(function(input, output){
                 output$UIselectXaxis <- renderUI(NULL)
                 output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = mychoices_allcols, width = "200%"))
                 
+                output$UIPointplotsBeeswarm     <- renderUI(NULL)
                 output$UIPointplotsplitBy       <- renderUI(NULL)
                 output$UIPointplotfilterColumn  <- renderUI(NULL)
+                output$UIPointplotSubsample     <- renderUI(NULL)
+                output$UIPointplotSubsampleN    <- renderUI(NULL)
+                output$UIPointplotSubsampleM    <- renderUI(NULL)
                 output$UIPointplotfilterValues  <- renderUI(NULL)
                 
                 output$UIBoxplothighlightCenter <- renderUI(NULL)
@@ -373,14 +411,18 @@ shinyServer(function(input, output){
       input$plotScatterBoxOrHeatmap
       
       isolate({
-        
-        filterDataFrame( df = htm, 
-                       batch_col = input$colBatch, 
-                       batch = input$batch, 
-                       highlightQCfailed = input$highlightQCfailed, 
-                       filterByColumn = input$PointplotfilterColumn,  
-                       whichValues = input$PointplotfilterValues, 
-                       col_QC = col_QC)
+
+        filterDataFrame(df                = htm, 
+                        y_col             = input$Yaxis,
+                        batch_col         = input$colBatch, 
+                        batch             = input$batch, 
+                        highlightQCfailed = input$highlightQCfailed, 
+                        filterByColumn    = input$PointplotfilterColumn,  
+                        whichValues       = input$PointplotfilterValues, 
+                        col_QC            = col_QC,
+                        subsampledata     = ifelse(is.null(input$PointplotSubsample), FALSE, input$PointplotSubsample),
+                        subsampleN        = ifelse(is.null(input$PointplotSubsample) | is.null(input$PointplotSubsampleN), NULL, input$PointplotSubsampleN),
+                        extremevalues     = ifelse(is.null(input$PointplotSubsample) | is.null(input$PointplotSubsampleM), NULL, input$PointplotSubsampleM))
         
       }) # isolate
       
@@ -398,17 +440,18 @@ shinyServer(function(input, output){
             if( ! is.null( input$batch ) )
             {
               switch(input$plotType,
-                 
+                     
                      "Scatter plot" = pointPlot(
                          df =  htmFilteredForCurrentPlot(), 
-                         batch = input$colBatch, 
                          x = input$Xaxis, 
                          y = input$Yaxis, 
                          col_QC = col_QC, 
                          highlightQCfailed = input$highlightQCfailed, 
+                         beeswarm = input$PointplotsBeeswarm,
                          splitBy = input$PointplotsplitBy, 
                          colTreatment = input$colTreatment, 
-                         colBatch = input$colBatch),
+                         colBatch = input$colBatch,
+                         colColors = if("HTM_color" %in% names(htmFilteredForCurrentPlot())) "HTM_color"),
                        
                      "Boxplot"      = boxPlot(
                          df =  htmFilteredForCurrentPlot(), 
