@@ -34,7 +34,7 @@ read.HTMtable <- function(filepath, filetype = c("Auto", "csv", "tsv", "xlsx")){
     if(filetype == "Auto" | missing(filetype)){
         
         tryCatch({
-            temp       <- read.csv(filepath, sep = ",", nrows = 10, stringsAsFactors = FALSE)
+            temp       <- read.delim(filepath, header = T, as.is = T, stringsAsFactors = FALSE)
             temp       <- read.table(filepath, sep = "\t", nrows = 10, stringsAsFactors = FALSE)
             fileheader <- readLines(filepath, n = 1)
             
@@ -59,7 +59,7 @@ read.HTMtable <- function(filepath, filetype = c("Auto", "csv", "tsv", "xlsx")){
     
     if(filetype == "tsv"){
         tryCatch(
-            return( read.table(filepath, sep = "\t", stringsAsFactors = FALSE) ),
+            return( read.delim(filepath, header = T, as.is = T, stringsAsFactors = FALSE) ),
             error = function(e) filetype == "invalid"
         )
     }
