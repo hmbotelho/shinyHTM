@@ -2,7 +2,7 @@ library(shiny)
 library(plotly)
 library(shinyjs)
 library(ggplot2)
-# library(xlsx)
+
 
 
 shinyUI(navbarPage("shinyHTM",
@@ -17,11 +17,15 @@ shinyUI(navbarPage("shinyHTM",
         helpText("Upload an image table (must be a comma-separated, tab-sepatated or Excel file)."),
         fluidRow(
             column(8,
-                fileInput('file1', 'Choose File', accept=c('.csv', '.txt', '.xlsx'), width = "90%")
+                fileInput('file1', 'Choose File', accept=c('.csv', '.txt', 'tsv', '.xlsx'), width = "90%")
             ),
             column(4,
                 radioButtons("loadFileType", label = h4("File format"),
                              choices = list("Auto detect" = "Auto", "Comma separated (csv)" = "csv", "Tab separated (txt)" = "tsv", "Excel (xlsx)" = "xlsx"), 
+                             selected = "Auto"),
+                br(),
+                radioButtons("loadDecimalSeparator", label = h4("File format"),
+                             choices = list("Auto detect" = "Auto", "Dot (.)" = ".", "Comma (,)" = ","), 
                              selected = "Auto")
             )
         )

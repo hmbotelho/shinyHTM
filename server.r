@@ -57,7 +57,7 @@ widgetnames <- {c("colTreatment", "colBatch", "colWell", "colPos",
                   "ValuesTable")}
 
 
-shinyServer(function(input, output){
+shinyServer(function(input, output, session){
 
     ################################################################
     # 0. INITIALIZE VARIABLES                                      #
@@ -73,11 +73,50 @@ shinyServer(function(input, output){
                               failed           = integer(),
                               stringsAsFactors = FALSE)
     
+    widgetSettings <- reactiveValues(LUTminmax = c(0,1))
+    
     
     
     ################################################################
     # 1. FILE INPUT                                                #
     ################################################################
+
+    observeEvent(input$loadFileType, {
+        
+        if(input$loadFileType == "Auto"){
+            updateRadioButtons(session, "loadDecimalSeparator",
+                               label = h4("File format"),
+                               choices = list("Auto detect" = "Auto", "Dot (.)" = ".", "Comma (,)" = ","),
+                               selected = "Auto"
+            )
+        }
+        
+        if(input$loadFileType == "csv"){
+            updateRadioButtons(session, "loadDecimalSeparator",
+                               label = h4("File format"),
+                               choices = list("Comma (.)" = "."),
+                               selected = "."
+            )
+        }
+        
+        if(input$loadFileType == "tsv"){
+            updateRadioButtons(session, "loadDecimalSeparator",
+                               label = h4("File format"),
+                               choices = list("Auto detect" = "Auto", "Dot (.)" = ".", "Comma (,)" = ","),
+                               selected = "Auto"
+            )
+        }
+        
+        if(input$loadFileType == "xlsx"){
+            updateRadioButtons(session, "loadDecimalSeparator",
+                               label = h4("File format"),
+                               choices = list("Auto detect" = "Auto"),
+                               selected = "Auto"
+            )
+        }
+        
+    })
+    
     observeEvent(input$file1, {
 
         # Reset datasets
@@ -90,9 +129,10 @@ shinyServer(function(input, output){
                                   failed           = integer(),
                                   stringsAsFactors = FALSE)
 
+
         # Read new dataset
-        htm <- read.HTMtable(input$file1$datapath, filetype = input$loadFileType)
-        
+        htm <- read.HTMtable(input$file1$datapath, filetype = input$loadFileType, decimalseparator = input$loadDecimalSeparator)
+
         # Check if data has been successfully read
         if(is.null(htm)){
             if(input$loadFileType == "Auto"){
@@ -365,7 +405,21 @@ shinyServer(function(input, output){
                     # Do not show LUT adjustments if the user selects a non-numerical column
                     if(!is.numeric(Ymin) | !is.numeric(Ymax)) return(NULL)
                     
-                    sliderInput("LUTminmax", "LUT adjustment", min = Ymin, max = Ymax, value = c(Ymin, Ymax), width = "100%")
+                    tagList(
+                        fluidRow(column(12,
+                                    sliderInput("LUTminmax", "LUT adjustment", min = Ymin, max = Ymax, value = c(Ymin, Ymax), width = "100%")
+                                )
+                        ),
+                        fluidRow(column(4,
+                                    actionButton("LUTreset", "Reset LUT", width = "100%")
+                                ),
+                                column(1),
+                                column(7,
+                                    actionButton("LUTquantile", "Autoscale LUT to 3% quantiles of each batch", width = "100%")
+                                )
+                        )
+                    )
+
                 })
                 
                 output$UILUTcolors              <- renderUI({
@@ -424,7 +478,7 @@ shinyServer(function(input, output){
                         subsampleN        = ifelse(is.null(input$PointplotSubsample) | is.null(input$PointplotSubsampleN), NULL, input$PointplotSubsampleN),
                         extremevalues     = ifelse(is.null(input$PointplotSubsample) | is.null(input$PointplotSubsampleM), NULL, input$PointplotSubsampleM))
         
-      }) # isolate
+      })
       
     })
 

@@ -25,10 +25,11 @@ echo <- function(...){
 
 # Reads a data.frame from csv, tsv, and xlsx files. Does not read the older xls format.
 # The file format can be explicitly mentioned or auto-detected.
-read.HTMtable <- function(filepath, filetype = c("Auto", "csv", "tsv", "xlsx")){
+read.HTMtable <- function(filepath, filetype = c("Auto", "csv", "tsv", "xlsx"), decimalseparator = c("Auto", ".", ",")){
+
     # filepath : full path to file. includes the filename. In Windows this is a temporary folder where the file is named '0'
     # filename : original filename
-    
+
     loadpackage("openxlsx")
 
     if(filetype == "Auto" | missing(filetype)){
@@ -52,14 +53,45 @@ read.HTMtable <- function(filepath, filetype = c("Auto", "csv", "tsv", "xlsx")){
 
     if(filetype == "csv"){
         tryCatch(
-            return( read.csv(filepath, sep = ",", stringsAsFactors = FALSE) ),
+            return( read.table(filepath, header = TRUE, sep = ",", dec = ".", fill = TRUE, as.is = TRUE, stringsAsFactors = FALSE) ),
             error = function(e) filetype == "invalid"
         )
     }
     
     if(filetype == "tsv"){
         tryCatch(
-            return( read.delim(filepath, header = T, as.is = T, stringsAsFactors = FALSE) ),
+            {
+
+                # Auto detect decimal separator
+                if(decimalseparator == "Auto" | missing(decimalseparator)){
+
+                    sampledata_df          <- read.table(filepath, header = TRUE, sep = "\t", nrows = 100, colClasses = "character", fill = TRUE, as.is = TRUE, stringsAsFactors = FALSE)
+                    sampledata_char        <- as.character(as.matrix(sampledata_df))
+                    
+                    sampledata_with_dots   <- grep("\\.", sampledata_char, value = TRUE)
+                    sampledata_with_1dot   <- sampledata_with_dots[!grepl("\\..*\\.", sampledata_with_dots)]
+                    sampledata_with_commas <- grep(",", sampledata_char, value = TRUE)
+                    sampledata_with_1comma <- sampledata_with_commas[!grepl(",.,", sampledata_with_commas)]
+                    
+                    # Let us imagine the true decimal separator is "."
+                    sampledata_dotseparated <- sampledata_with_1dot[!is.na(as.numeric(sampledata_with_1dot))]
+                    n_dotseparated          <- length(sampledata_dotseparated)
+                    
+                    # Let us imagine the true decimal separator is ","
+                    sampledata_commaseparated <- gsub(",", "\\.", sampledata_with_1comma)
+                    sampledata_commaseparated <- sampledata_commaseparated[!is.na(as.numeric(sampledata_commaseparated))]
+                    n_commaseparated          <- length(sampledata_commaseparated)
+                    
+                    # Decide based on the most abundant
+                    if(n_commaseparated > n_dotseparated){
+                        decimalseparator <- ","
+                    } else{
+                        decimalseparator <- "."
+                    }
+                }
+
+                return( read.table(filepath, header = TRUE, sep = "\t", dec = decimalseparator, fill = TRUE, as.is = TRUE, stringsAsFactors = FALSE) )
+            },
             error = function(e) filetype == "invalid"
         )
     }
@@ -174,6 +206,19 @@ subsetUI <- function(LS, type = "input", name = "", field = "selected"){
     # Return result
     LS[[okelement]][[field]]
 }
+
+################################################################
+# PLOTTING                                                     #
+################################################################
+
+    # Plotting UI
+    ############################################################
+
+
+
+    # Plot-generating functions
+    ############################################################
+    
 
 # Generate Plotly scatter/jitter plot
 pointPlot <- function( df, x, y, col_QC, highlightQCfailed, beeswarm = FALSE, splitBy = "None", colTreatment, colBatch, colColors ){
