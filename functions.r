@@ -489,7 +489,7 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     cat( system_cmd )
     
     # Evoke Fiji with the expression compiled above
-    system( system_cmd )
+    system( system_cmd, wait = FALSE )
 }
 
 # Generate coordinates for heatmap

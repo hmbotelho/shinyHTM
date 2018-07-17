@@ -409,14 +409,14 @@ shinyServer(function(input, output, session){
                         fluidRow(column(12,
                                     sliderInput("LUTminmax", "LUT adjustment", min = Ymin, max = Ymax, value = c(Ymin, Ymax), width = "100%")
                                 )
-                        ),
-                        fluidRow(column(4,
-                                    actionButton("LUTreset", "Reset LUT", width = "100%")
-                                ),
-                                column(1),
-                                column(7,
-                                    actionButton("LUTquantile", "Autoscale LUT to 3% quantiles of each batch", width = "100%")
-                                )
+                        # ),
+                        # fluidRow(column(4,
+                        #             actionButton("LUTreset", "Reset LUT", width = "100%")
+                        #         ),
+                        #         column(1),
+                        #         column(7,
+                        #             actionButton("LUTquantile", "Autoscale LUT to 3% quantiles of each batch", width = "100%")
+                        #         )
                         )
                     )
 
