@@ -1149,18 +1149,20 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
         
         # compute
         if(1) { #treat %in% c("SETDB1_s19112")) {
-            
+
             # only keep valid treatment values to find the corresponding experiments
-            ids  <- ids[which((data[ids,col_QC]==1) & !(is.na(data[ids,measurement])))]
-            exps <- unique(data[ids,col_Experiment])
+            ids         <- ids[which((data[ids,col_QC]==1) & !(is.na(data[ids,measurement])))]
+            ids_negctrl <- if(negative_ctrl == "All treatments"){
+                               which(data[[col_QC]]==1 & !is.na(data[[measurement]]))
+                           } else{
+                               which(data[[col_QC]]==1 & !is.na(data[[measurement]]) & data[[col_Treatment]] %in% negative_ctrl)
+                           }
+            ids_ok      <- c(ids, ids_negctrl)
+            exps        <- unique(data[ids,col_Experiment])
             
             # extract treatment and control values of the respective experiments
-            d <- subset(data, 
-                        (data[[col_Treatment]] %in% c(treat,negative_ctrl))
-                        & (data[[col_Experiment]] %in% exps) 
-                        # & !(data[[htm@settings@columns$experiment]] %in% htmGetVectorSettings("statistics$experiments_to_exclude")) 
-                        & (data[[col_QC]]==1)
-                        & !(is.na(data[[measurement]])), 
+            d <- subset(data[ids_ok,], 
+                        (data[ids_ok, col_Experiment] %in% exps), 
                         select = c(col_Treatment,measurement,col_Experiment,col_ObjectCount))
             
             names(d)[names(d)==measurement]     <- "value"
@@ -1168,9 +1170,9 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
             names(d)[names(d)==col_Experiment]  <- "experiment"
             names(d)[names(d)==col_ObjectCount] <- "count"
             
-            d$treatment = ifelse(d$treatment %in% negative_ctrl, "control", d$treatment)
+            d[1:length(ids), "treatment"] <- treat
+            d[(length(ids)+1):(length(ids)+length(ids_negctrl)), "treatment"] <- "control"
             
-            #print(d)
             
             if ( (sum(d$treatment=="control")>1) & (sum(d$treatment==treat)>1) ) {
                 
