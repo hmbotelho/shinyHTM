@@ -306,12 +306,25 @@ shinyServer(function(input, output, session){
                    "Scatter plot" = {
                        plotType[["type"]]      <- "scatter"
                        if(is.numeric( htm[[input$Xaxis]] ) ){
-                           plotType[["subtype"]]   <- "scatter"
+
                            # The X axis can be treated as continuous or categorical
                            plotType[["XaxisType"]] <- "continuous"
                            output$UIXContinuousCategorical <- renderUI(radioButtons("XContinuousCategorical", label = "How to treat X axis values",
                                                                                     choices = list("continuous", "categorical"),
                                                                                     selected = "continuous"))
+                           # Plot subtype can only be determined once the 'XContinuousCategorical' widget exists
+                           # if(input$XContinuousCategorical == "continuous"){
+                           #     plotType[["subtype"]]   <- "scatter"
+                           # }
+                           # 
+                           # if(input$XContinuousCategorical == "categorical"){
+                           #     if(input$PointplotsBeeswarm){
+                           #         plotType[["subtype"]]   <- "beeswarm"
+                           #     } else{
+                           #         plotType[["subtype"]]   <- "jitter"
+                           #     }
+                           # }
+
                        } else{
                            if(input$PointplotsBeeswarm){
                                plotType[["subtype"]]   <- "beeswarm"
@@ -349,6 +362,21 @@ shinyServer(function(input, output, session){
     # Determine the kind of plot to draw #2: in some plot types the user can select how to handle X axis values
     observeEvent(input$XContinuousCategorical,{
         plotType[["XaxisType"]] <- input$XContinuousCategorical
+        
+        # Determine the scatter plot subtype
+        switch(input$XContinuousCategorical, 
+            "continuous" = {
+                plotType[["subtype"]]   <- "scatter"
+            },
+            "categorical" = {
+                if(input$PointplotsBeeswarm){
+                    plotType[["subtype"]]   <- "beeswarm"
+                } else{
+                    plotType[["subtype"]]   <- "jitter"
+                }
+            }
+        )
+        
     })
     
     
@@ -561,6 +589,7 @@ shinyServer(function(input, output, session){
                          df =  htmFilteredForCurrentPlot(), 
                          x = input$Xaxis, 
                          y = input$Yaxis, 
+                         plottype = plotType[["subtype"]],
                          col_QC = col_QC, 
                          highlightQCfailed = input$highlightQCfailed, 
                          beeswarm = input$PointplotsBeeswarm,

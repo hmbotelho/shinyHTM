@@ -258,7 +258,7 @@ subsetUI <- function(LS, type = "input", name = "", field = "selected"){
     
 
 # Generate Plotly scatter/jitter plot
-pointPlot <- function( df, x, y, col_QC, highlightQCfailed, beeswarm = FALSE, splitBy = "None", colTreatment, colBatch, colColors ){
+pointPlot <- function( df, x, y, plottype, col_QC, highlightQCfailed, beeswarm = FALSE, splitBy = "None", colTreatment, colBatch, colColors ){
 
     # Initialize variables
     plotSymbols <- c( approved = 20, rejected = 4 )
@@ -278,20 +278,17 @@ pointPlot <- function( df, x, y, col_QC, highlightQCfailed, beeswarm = FALSE, sp
     }
     names(plotColors) <- plotColors
     
+    # # Decide what kind of plot to do: scatter, jitter or beeswarm;
+    # plottype <- if(is.numeric( df[[x]] ) & is.numeric( df[[y]] )){
+    #     "scatter"
+    # } else{
+    #     if(beeswarm){
+    #         "beeswarm"
+    #     } else{
+    #         "jitter"
+    #     }
+    # }
 
-    
-    
-    # Decide what kind of plot to do: scatter, jitter or beeswarm;
-    plottype <- if(is.numeric( df[[x]] ) & is.numeric( df[[y]] )){
-        "scatter"
-    } else{
-        if(beeswarm){
-            "beeswarm"
-        } else{
-            "jitter"
-        }
-    }
-    
     
     # Define the data to be plotted
     g <- ggplot(df, aes_string(x, y)) + ggtitle( colBatch ) + scale_colour_gradient2()
