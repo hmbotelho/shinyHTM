@@ -86,7 +86,8 @@ shinyUI(navbarPage("shinyHTM",
         fluidRow(
             
             column(2,
-                selectInput("plotType", label = "Plot Type", choices = c("Scatter plot", "Boxplot", "Heatmap"))
+                selectInput("plotType", label = "Plot Type", choices = c("Scatter plot", "Boxplot", "Heatmap")),
+                uiOutput("UIXContinuousCategorical")
             ),
             
             column(7,

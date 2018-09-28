@@ -75,7 +75,11 @@ shinyServer(function(input, output, session){
     
     widgetSettings <- reactiveValues(LUTminmax = c(0,1))
     
+    # This variable stores info on the kind of plot to draw
+    plotType <- reactiveValues(type="none", subtype="none", XaxisType="none")
     
+
+                               
     
     ################################################################
     # 1. FILE INPUT                                                #
@@ -293,6 +297,61 @@ shinyServer(function(input, output, session){
     ################################################################
     # 3. PLOTTING                                                  #
     ################################################################
+    
+    # Determine the kind of plot to draw #1: auto-detect plot type
+    observeEvent(c(input$file1, input$plotType, input$Xaxis, input$PointplotsBeeswarm),{
+        
+        if (exists("htm") & !is.null(input$Xaxis) & !is.null(input$Yaxis)){
+            switch(input$plotType,
+                   "Scatter plot" = {
+                       plotType[["type"]]      <- "scatter"
+                       if(is.numeric( htm[[input$Xaxis]] ) ){
+                           plotType[["subtype"]]   <- "scatter"
+                           # The X axis can be treated as continuous or categorical
+                           plotType[["XaxisType"]] <- "continuous"
+                           output$UIXContinuousCategorical <- renderUI(radioButtons("XContinuousCategorical", label = "How to treat X axis values",
+                                                                                    choices = list("continuous", "categorical"),
+                                                                                    selected = "continuous"))
+                       } else{
+                           if(input$PointplotsBeeswarm){
+                               plotType[["subtype"]]   <- "beeswarm"
+                               plotType[["XaxisType"]] <- "categorical"
+                               output$UIXContinuousCategorical <- renderUI(NULL)
+                           } else{
+                               plotType[["subtype"]]   <- "jitter"
+                               plotType[["XaxisType"]] <- "categorical"
+                               output$UIXContinuousCategorical <- renderUI(NULL)
+                           }
+                       }
+                   },
+                   "Boxplot" = {
+                       plotType[["type"]]      <- "Boxplot"
+                       plotType[["subtype"]]   <- "Boxplot"
+                       plotType[["XaxisType"]] <- "none"
+                       output$UIXContinuousCategorical <- renderUI(NULL)
+                   },
+                   "Heatmap" = {
+                       plotType[["type"]]      <- "Heatmap"
+                       plotType[["subtype"]]   <- "Heatmap"
+                       plotType[["XaxisType"]] <- "none"
+                       output$UIXContinuousCategorical <- renderUI(NULL)
+                   }
+            )
+        } else{
+            plotType[["type"]]      <- "none"
+            plotType[["subtype"]]   <- "none"
+            plotType[["XaxisType"]] <- "none"
+            output$UIXContinuousCategorical <- renderUI(NULL)
+        }
+
+    })
+    
+    # Determine the kind of plot to draw #2: in some plot types the user can select how to handle X axis values
+    observeEvent(input$XContinuousCategorical,{
+        plotType[["XaxisType"]] <- input$XContinuousCategorical
+    })
+    
+    
     output$UIselectBatch <- renderUI({
         input$file1
         input$plotType
@@ -315,6 +374,7 @@ shinyServer(function(input, output, session){
         }
     })
     
+
     observeEvent(c(input$file1, input$buttonSessionLoad, input$plotType, input$applyNorm),{
 
         mychoices_allcols          <- if (exists("htm")) as.list(names(htm)) else NULL
@@ -467,6 +527,7 @@ shinyServer(function(input, output, session){
       isolate({
 
         filterDataFrame(df                = htm, 
+                        x_col             = input$Xaxis,
                         y_col             = input$Yaxis,
                         batch_col         = input$colBatch, 
                         batch             = input$batch, 
@@ -475,6 +536,7 @@ shinyServer(function(input, output, session){
                         whichValues       = input$PointplotfilterValues, 
                         col_QC            = col_QC,
                         subsampledata     = ifelse(is.null(input$PointplotSubsample), FALSE, input$PointplotSubsample),
+                        XAxisType         = plotType[["XaxisType"]],
                         subsampleN        = ifelse(is.null(input$PointplotSubsample) | is.null(input$PointplotSubsampleN), NULL, input$PointplotSubsampleN),
                         extremevalues     = ifelse(is.null(input$PointplotSubsample) | is.null(input$PointplotSubsampleM), NULL, input$PointplotSubsampleM))
         

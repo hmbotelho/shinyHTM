@@ -109,7 +109,9 @@ read.HTMtable <- function(filepath, filetype = c("Auto", "csv", "tsv", "xlsx"), 
     
 }
 
-filterDataFrame <- function( df, y_col, batch_col, batch, highlightQCfailed, filterByColumn, whichValues, col_QC, subsampledata = FALSE, subsampleN = 10, extremevalues = 10){
+
+filterDataFrame <- function( df, x_col, y_col, batch_col, batch, highlightQCfailed, filterByColumn, whichValues, col_QC, subsampledata = FALSE, XAxisType = "continuous", subsampleN = 10, extremevalues = 10){
+
     # Subset batches
     if( ! is.null( batch_col ) & ! is.null( batch ) ) {
         if ( batch != "All batches" ) {
@@ -143,30 +145,65 @@ filterDataFrame <- function( df, y_col, batch_col, batch, highlightQCfailed, fil
     # Subsample data frame
     if(subsampledata){
         
-        allvalues <- data.frame(x                = 1:nrow(htm),
-                                values           = htm[[y_col]],
-                                stringsAsFactors = FALSE)
-        
-        allvalues_numeric <- allvalues[!is.na(allvalues$values),]
-        allvalues_numeric <- allvalues_numeric[order(allvalues_numeric$values, decreasing = TRUE),]
+        # Decide how to do the subsampling
+        switch(XAxisType, 
+            "continuous" = {
+                
+                # The X axis is treated as a continuous numerical variable (i.e. there is only 1 category with continuous values)
+                # This is the algorithm followed further below:
+                #   1. Select the M highest and M lowest *of all y values* (These are the 'extreme values')
+                #   2. Take all non-extreme values and show only 1 in each N (These are the 'subsampled values')
+                #   3. Color the extreme values as green/red and subsampled values as black
+                
+                categories <- factor(rep(1, nrow(df)))
+            },
+            "categorical" = {
+                
+                # The X axis is treated as a categorical variable (each X value defines a category)
+                # This is the algorithm followed further below:
+                #   1. Split the data according according to their X values
+                #   2. Select the M highest and M lowest values *of each X category* (These are the 'extreme values')
+                #   3. Take all non-extreme values from each category and show only 1 in each N (These are the 'subsampled values')
+                #   4. Color the extreme values as green/red and subsampled values as black
+                
+                categories <- factor(df[[x_col]])
+            }
+        )
+             
+        df_final <- by(df, categories, function(df_byCat){
             
-        # Row numbers of top and bottom M values
-        rows_top    <- head(allvalues_numeric$x, n = extremevalues)
-        rows_bottom <- tail(allvalues_numeric$x, n = extremevalues)
+            allvalues <- data.frame(x                = 1:nrow(df_byCat),
+                                    values           = df_byCat[[y_col]],
+                                    stringsAsFactors = FALSE)
+            
+            allvalues_numeric <- allvalues[!is.na(allvalues$values),]
+            allvalues_numeric <- allvalues_numeric[order(allvalues_numeric$values, decreasing = TRUE),]
+            
+            # Row numbers of top and bottom M values
+            rows_top    <- head(allvalues_numeric, n = extremevalues)[["x"]]
+            rows_bottom <- tail(allvalues_numeric, n = extremevalues)[["x"]]
+            
+            # Row numbers of values which are not the top or bottom ones
+            rows_others <- setdiff(allvalues$x, c(rows_top, rows_bottom))
+            
+            # Row numbers of each Nth row
+            rows_sampled <- rows_others[seq(from = 1, to = length(rows_others), by = subsampleN)]
+            
+            # Assemble final data frame (extreme_low, extreme_high and subsampled values only)
+            df_final0 <- df_byCat[c(rows_top, rows_bottom, rows_sampled),]
+            df_final0$HTM_color <- c(rep("green3", extremevalues),
+                                     rep("red", extremevalues),
+                                     rep("black", length(rows_sampled)))
+            df_final0
+        })
         
-        # Row numbers of values which are not the top or bottom ones
-        rows_others <- setdiff(allvalues$x, c(rows_top, rows_bottom))
-        
-        # Row numbers of each Nth row
-        rows_sampled <- rows_others[seq(from = 1, to = length(rows_others), by = subsampleN)]
-        
-        df <- df[c(rows_top, rows_sampled, rows_bottom),]
-        df$HTM_color <- c(rep("red", extremevalues),
-                          rep("black", length(rows_sampled)),
-                          rep("red", extremevalues))
+        df_final <- do.call(rbind, df_final)
+
+    } else{
+        df_final <- df
     }
 
-    return(df)
+    return(df_final)
     
 }
 
