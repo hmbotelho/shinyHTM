@@ -1119,6 +1119,17 @@ shinyServer(function(input, output, session){
     
     
     ################################################################
+    # DATA TABLE                                                   #
+    ################################################################
+    observeEvent(input$saveHTMtable,{
+        path <- tclvalue(tkgetSaveFile(initialfile = "HTMtable.csv"))
+        write.csv(htm, path, row.names = FALSE)
+    })
+    
+    
+    
+    
+    ################################################################
     # SAVE & LOAD SESSION                                          #
     ################################################################
     

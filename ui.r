@@ -24,7 +24,7 @@ shinyUI(navbarPage("shinyHTM",
                              choices = list("Auto detect" = "Auto", "Comma separated (csv)" = "csv", "Tab separated (txt)" = "tsv", "Excel (xlsx)" = "xlsx"), 
                              selected = "Auto"),
                 br(),
-                radioButtons("loadDecimalSeparator", label = h4("File format"),
+                radioButtons("loadDecimalSeparator", label = h4("Decimal separator"),
                              choices = list("Auto detect" = "Auto", "Dot (.)" = ".", "Comma (,)" = ","), 
                              selected = "Auto")
             )
@@ -215,9 +215,8 @@ shinyUI(navbarPage("shinyHTM",
     navbarMenu("More",
                
         tabPanel("View table",
-            #actionButton("update_dataTable", "Update table", icon = icon("refresh"), style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
-            #br(),
-            #dataTableOutput("ValuesTable")
+            actionButton("saveHTMtable", "Save this table", icon = icon("save")),
+            br(),br(),
             uiOutput("UIValuesTable")
         ),
         
