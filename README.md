@@ -41,9 +41,9 @@ The app runs in   a browser window like so:
 * Optional: microscopy images and [Fiji](https://fiji.sc/)
 
 
-## How to run
+## Running shinyHTM [Windows]
 * Make sure your computer is online  
-* Install the following packages
+* Install the following packages (only required on the first time you run shinyHTM)  
 ```r
 install.packages(c("shiny","shinyalert","plotly","shinyjs","xlsx", "tcltk"))
 ```
@@ -54,3 +54,24 @@ runGitHub("shinyHTM", "hmbotelho")
 ```
 * This will run the latest version of shinyHTM  
 * Sample datasets are provided [here](https://github.com/hmbotelho/sample_data).  
+
+
+
+## Running shinyHTM [MacOS]
+shinyHTM requires an updated X11 window manager on MacOS.  
+* Make sure your computer is online  
+* When running shinyHTM for the first time (or after a system update) download and install XQuartz from [here](https://www.xquartz.org/).  
+* Run XQuartz  
+* Run R by typing in the command `r`  
+* Install the following packages (only required on the first time you run shinyHTM)  
+```r
+install.packages(c("shiny","shinyalert","plotly","shinyjs","xlsx", "tcltk"))
+```
+* Type the following commands:  
+```r
+library(shiny)
+runGitHub("shinyHTM", "hmbotelho")
+```
+* This will run the latest version of shinyHTM  
+* Sample datasets are provided [here](https://github.com/hmbotelho/sample_data).  
+
