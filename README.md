@@ -45,7 +45,7 @@ The app runs in   a browser window like so:
 * Make sure your computer is online  
 * Install the following packages
 ```r
-install.packages(c("shiny","shinyalert","plotly","shinyjs","xlsx"))
+install.packages(c("shiny","shinyalert","plotly","shinyjs","xlsx", "tcltk"))
 ```
 * Type the following commands:  
 ```r
