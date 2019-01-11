@@ -17,6 +17,8 @@
 # Streamline the QC GUI
 enableBookmarking(store = "url")
 source("./functions.r")
+source("./settings.r")
+
 loadpackage("shiny")
 loadpackage("plotly")
 loadpackage("ggplot2")
@@ -164,40 +166,48 @@ shinyServer(function(input, output, session){
     ################################################################
     # 2. SETTINGS                                                  #
     ################################################################
+    
+    createInputSelection <- function( inputId, label )
+    {
+      selectInput( 
+        inputId, 
+        label, 
+        choices = if (exists("htm")) as.list(names(htm) ) else NULL,
+        selected = subsetUI( UI(), type = "input", name = inputId ),
+        width = "100%")
+    }
+    
     output$UIcolNameTreatment        <- renderUI({
         input$file1
         input$applyNorm
-        
-        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
-
-        selectInput("colTreatment", "Treatment:", mychoices, width = "100%")
+      
+        createInputSelection( "colTreatment", "Treatment:" )
     })
+    
     output$UIcolNameBatch            <- renderUI({
         input$file1
         input$applyNorm
-        
-        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
-        
-        selectInput("colBatch", "Batch:", mychoices, width = "100%")
+        createInputSelection( "colBatch", "Batch:" )
     })
+    
     output$UIcolNameWell             <- renderUI({
         input$file1
         input$applyNorm
-        
-        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
-        
-        selectInput("colWell", "Well coordinate:", mychoices, width = "100%")
+        createInputSelection( "colWell", "Well coordinate:" )
     })
+    
     output$UIcolNamePos              <- renderUI({
         input$file1
         input$applyNorm
-        
-        mychoices <- if (exists("htm")) as.list(names(htm)) else NULL
-        
-        selectInput("colPos", "Sub-position coordinate:", mychoices, width = "100%")
+        createInputSelection( "colPos", "Sub-position coordinate:" )
     })
+    
     output$UIpathInTable             <- renderUI({
-        textInput("pathInTable", "Image root folder name in table", "c:\\tutorial\\myplate_01", width = "100%")
+        textInput(
+          "pathInTable", 
+          "Image root folder name in table", 
+          "c:\\tutorial\\myplate_01", 
+          width = "100%")
     })
     output$UIpathInComputer          <- renderUI({
         textInput("pathInComputer", "Image root folder name in this computer", "c:\\myplate_01", width = "100%")
@@ -256,15 +266,6 @@ shinyServer(function(input, output, session){
         sliderInput("squaresize", "Square size", min=0.5, max=5, value=1, step=0.5)
     })
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
     output$UIfiji_path        <- renderUI({
         
         if (Sys.info()['sysname'] == "Windows")
@@ -1126,15 +1127,39 @@ shinyServer(function(input, output, session){
         write.csv(htm, path, row.names = FALSE)
     })
     
-    
-    
+    ################################################################
+    # SETTINGS                                                     #
+    ################################################################
+   
+    output$saveSettings <- downloadHandler(
+      
+      filename = function() {
+        return('Settings')
+      },
+      
+      content = function(file) {
+        saveSettings( getUISettings(), file )
+      }
+    )
     
     ################################################################
     # SAVE & LOAD SESSION                                          #
     ################################################################
     
-    # Keep track of the state of all items in the UI
-    UI <<- reactive(
+    
+    # READ SETTINGS
+    UI <- reactive({
+      if( is.null( input$settings_file ) )
+      {
+        return ( NULL )
+      }
+      req( input$settings_file )
+      readSettings( input$settings_file$datapath )
+    })
+    
+    # Fetch UI settings
+    getUISettings <- function()
+    {
         list(
             list(type     = "input",
                  name     = "file1",
@@ -1342,7 +1367,7 @@ shinyServer(function(input, output, session){
                  selected = input$SummaryNumObjects,
                  comment  = "")
         )
-    )
+    }
     
     
     observeEvent(input$buttonSessionSave, {
@@ -1354,9 +1379,9 @@ shinyServer(function(input, output, session){
             echo("")
             path_to_htm <- tclvalue( tkgetOpenFile() )
 
-            temp <- UI()
-            temp[[1]]$selected <- path_to_htm
-            UI <- reactive(temp)
+            #temp <- UI()
+            #temp[[1]]$selected <- path_to_htm
+            #UI <- reactive(temp)
             
             echo("Dialog box: Where shall the session file be saved?")
             echo("")
@@ -1422,16 +1447,21 @@ shinyServer(function(input, output, session){
                 echo("* Loading widget settings")
                 
                 output$UIcolNameTreatment    <- renderUI({
-                    selectInput("colTreatment", "Treatment:", as.list(names(htm)), selected = subsetUI(UI, "input", "colTreatment"),  width = "100%")
+                    selectInput( 
+                      "colTreatment", 
+                      "Treatment:", 
+                      as.list(names(htm)), 
+                      selected = subsetUI( UI(), "input", "colTreatment"),  
+                      width = "100%" )
                 })
                 output$UIcolNameBatch        <- renderUI({
-                    selectInput("colBatch", "Batch:", as.list(names(htm)), selected = subsetUI(UI, "input", "colBatch"), width = "100%")
+                    selectInput("colBatch", "Batch:", as.list(names(htm)), selected = subsetUI(UI(), "input", "colBatch"), width = "100%")
                 })
                 output$UIcolNameWell         <- renderUI({
-                    selectInput("colWell", "Well coordinate:", as.list(names(htm)), selected = subsetUI(UI, "input", "colWell"), width = "100%")
+                    selectInput("colWell", "Well coordinate:", as.list(names(htm)), selected = subsetUI(UI(), "input", "colWell"), width = "100%")
                 })
                 output$UIcolNamePos          <- renderUI({
-                    selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), selected = subsetUI(UI, "input", "colPos"), width = "100%")
+                    selectInput("colPos", "Sub-position coordinate:", as.list(names(htm)), selected = subsetUI(UI(), "input", "colPos"), width = "100%")
                 })
                 output$UIfiji_path           <- renderUI({
                     if (Sys.info()['sysname'] == "Windows")
