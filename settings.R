@@ -6,19 +6,21 @@ settingNames <- c("imagePathColumns")
 # Convenience function which simplifies subsetting the UI list
 subsetUI <- function( LS, type = "input", name = "", field = "selected"){
   
-  print("Fetching setting")
-  
-  if ( ! exists("UI") ) 
-  { 
-    print("UI does not exist => return setting: NULL")
-    return ( NULL )
-  }
+  print( paste0("Fetching setting: ", name) )
   
   if( name == "" ) 
   {
     print("No name => return setting: NULL")
     return ( NULL )
   }
+  
+  if( is.null( LS ) ) 
+  {
+    print("Settings object is NULL => return setting: NULL")
+    return ( NULL )
+  }
+  
+  
   
   # Let's take this list 'UI' as an example
   # [[1]]
@@ -43,9 +45,7 @@ subsetUI <- function( LS, type = "input", name = "", field = "selected"){
   if(is.reactive(LS)){
     LS <- isolate(LS())
   }
-  
-  print( paste0( "Fetching setting: ", name ) )
-  
+
   types <- sapply(LS, function(x) x$type)
   names <- sapply(LS, function(x) x$name)
   okelement <- which(types == type & names == name)

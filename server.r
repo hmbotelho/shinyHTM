@@ -17,6 +17,7 @@
 # Streamline the QC GUI
 enableBookmarking(store = "url")
 source("./functions.r")
+print("sourcing settings.r")
 source("./settings.r")
 
 loadpackage("shiny")
@@ -182,25 +183,28 @@ shinyServer(function(input, output, session){
     output$UIcolNameTreatment        <- renderUI({
         input$file1
         input$applyNorm
-      
+        UI()
         createInputSelection( "colTreatment", "Treatment:" )
     })
     
     output$UIcolNameBatch            <- renderUI({
         input$file1
         input$applyNorm
+        UI()
         createInputSelection( "colBatch", "Batch:" )
     })
     
     output$UIcolNameWell             <- renderUI({
         input$file1
         input$applyNorm
+        UI()
         createInputSelection( "colWell", "Well coordinate:" )
     })
     
     output$UIcolNamePos              <- renderUI({
         input$file1
         input$applyNorm
+        UI()
         createInputSelection( "colPos", "Sub-position coordinate:" )
     })
     
@@ -227,7 +231,11 @@ shinyServer(function(input, output, session){
       mychoices  <- if (exists("htm")) as.list( c("NA", names(htm))) else NULL
       myselected <- if (exists("htm")) getObjectPositionColumn( names(htm), "X") else NULL
       
-      selectInput("colObjectPosX", "Object's x-position:", mychoices, selected = myselected, width = "100%")
+      selectInput("colObjectPosX", 
+                  "Object's x-position:", 
+                  mychoices, 
+                  selected = myselected, 
+                  width = "100%")
     })
 
     output$UIcolNameObjectPosY       <- renderUI({
@@ -249,6 +257,7 @@ shinyServer(function(input, output, session){
       
       selectInput("colObjectPosZ", "Object's z-position:", mychoices, selected = myselected, width = "100%")
     })
+    
     output$UIwells_Y                 <- renderUI({
         numericInput("wells_Y", "Number of Rows", 16)
     })
@@ -1151,13 +1160,17 @@ shinyServer(function(input, output, session){
     
     # READ SETTINGS
     UI <- reactive({
-      if( is.null( input$settings_file ) )
-      {
-        return ( NULL )
-      }
+      input$settings_file
+      print("Settings file changed...")
       req( input$settings_file )
       readSettings( input$settings_file$datapath )
     })
+    
+    test <- reactive({
+      print("Settings file changed")
+      input$settings_file
+    })
+    
     
     # Fetch UI settings
     getUISettings <- function()
