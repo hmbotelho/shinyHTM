@@ -15,6 +15,8 @@
 # Update plot symbols each time QC is applied
 # Correct the way shiny 'upload files', using a temporary folder (makes it difficult to restore session)
 # Streamline the QC GUI
+rm( list = ls() )
+
 enableBookmarking(store = "url")
 source("./functions.r")
 print("sourcing settings.r")
@@ -172,6 +174,7 @@ shinyServer(function(input, output, session){
     
     createInputSelection <- function( inputId, label )
     {
+      print( paste0("Creating UI: ", inputId ));
       selectInput( 
         inputId,
         label, 
@@ -183,7 +186,9 @@ shinyServer(function(input, output, session){
     output$UIcolNameTreatment        <- renderUI({
         input$file1
         input$applyNorm
+        print("before UI()")
         UI()
+        print("after UI()")
         createInputSelection( "colTreatment", "Treatment:" )
     })
     
@@ -259,18 +264,16 @@ shinyServer(function(input, output, session){
     })
     
     output$UIwells_Y                 <- renderUI({
-        #UI()
-        #subsetUI( UI(), type = "input", name = "wells_Y" )
-        numericInput("wells_Y", "Number of Rows", 12 )
+        numericInput("wells_Y", "Number of Rows", subsetUI( UI(), type = "input", name = "wells_Y" ) )
     })
     output$UIwells_X                 <- renderUI({
-        numericInput("wells_X", "Number of Columns", 24)
+        numericInput("wells_X", "Number of Columns", subsetUI( UI(), type = "input", name = "wells_X" ))
     })
     output$UInpos_Y                  <- renderUI({
-        numericInput("npos_Y", "Number of subposition Rows", 2)
+        numericInput("npos_Y", "Number of subposition Rows", subsetUI( UI(), type = "input", name = "npos_Y" ))
     })
     output$UInpos_X                  <- renderUI({
-        numericInput("npos_X", "Number of subposition Columns", 2)
+        numericInput("npos_X", "Number of subposition Columns", subsetUI( UI(), type = "input", name = "npos_X" ))
     })
     output$UIsquaredodge             <- renderUI({
         sliderInput("squaredodge", "Separation between positions", min=0, max=0.5, value=0.2, step=0.1)
@@ -1159,18 +1162,21 @@ shinyServer(function(input, output, session){
     # SAVE & LOAD SESSION                                          #
     ################################################################
     
-    
     # READ SETTINGS
     UI <- reactive({
-      input$settings_file
-      print("Settings file changed...")
+      if( is.null(input$settings_file) )
+      {
+        print( "Settings file is NULL")
+        return( NULL )
+      }
       req( input$settings_file )
+      print("Refreshing UI()")
       readSettings( input$settings_file$datapath )
     })
     
     test <- reactive({
-      print("Settings file changed")
       input$settings_file
+      print("TEST: Settings file")
     })
     
     
