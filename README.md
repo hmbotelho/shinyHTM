@@ -65,7 +65,7 @@ shinyHTM requires an updated X11 window manager on MacOS.
 * Run R by typing in the command `r`  
 * Install the following packages (only required on the first time you run shinyHTM)  
 ```r
-install.packages(c("shiny","shinyalert","plotly","shinyjs","xlsx", "tcltk"))
+install.packages(c("shiny","shinyalert","plotly","shinyjs","xlsx", "tcltk", "RJSONIO", "rjson"))
 ```
 * Type the following commands:  
 ```r
