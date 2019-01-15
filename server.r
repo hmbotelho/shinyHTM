@@ -172,7 +172,7 @@ shinyServer(function(input, output, session){
     createInputSelection <- function( inputId, label )
     {
       selectInput( 
-        inputId, ??
+        inputId,
         label, 
         choices = if (exists("htm")) as.list(names(htm) ) else NULL,
         selected = subsetUI( UI(), type = "input", name = inputId ),
