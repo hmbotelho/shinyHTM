@@ -259,7 +259,9 @@ shinyServer(function(input, output, session){
     })
     
     output$UIwells_Y                 <- renderUI({
-        numericInput("wells_Y", "Number of Rows", 16)
+        #UI()
+        #subsetUI( UI(), type = "input", name = "wells_Y" )
+        numericInput("wells_Y", "Number of Rows", 12 )
     })
     output$UIwells_X                 <- renderUI({
         numericInput("wells_X", "Number of Columns", 24)

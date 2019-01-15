@@ -45,6 +45,8 @@ subsetUI <- function( LS, type = "input", name = "", field = "selected"){
   if(is.reactive(LS)){
     LS <- isolate(LS())
   }
+  
+  print("aaa")
 
   types <- sapply(LS, function(x) x$type)
   names <- sapply(LS, function(x) x$name)
