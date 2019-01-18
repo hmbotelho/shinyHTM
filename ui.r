@@ -58,6 +58,7 @@ shinyUI(navbarPage("shinyHTM",
         uiOutput("UIpathInTable"),
         uiOutput("UIpathInComputer"),
         uiOutput("UIprefixPath"),
+        uiOutput("UIprefixFile"),
         hr(),
         
         uiOutput("UIcolNameObjectPosX"),

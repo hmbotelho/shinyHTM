@@ -20,8 +20,7 @@ subsetUI <- function( LS, type = "input", name = "", field = "selected"){
     return ( NULL )
   }
   
-  
-  
+
   # Let's take this list 'UI' as an example
   # [[1]]
   # [[1]]$type
@@ -45,17 +44,18 @@ subsetUI <- function( LS, type = "input", name = "", field = "selected"){
   if(is.reactive(LS)){
     LS <- isolate(LS())
   }
-  
-  print("aaa")
 
   types <- sapply(LS, function(x) x$type)
   names <- sapply(LS, function(x) x$name)
   okelement <- which(types == type & names == name)
   
   if(length(okelement) > 1) stop(paste0("There are multiple list elements matching the criteria: ", paste(okelement, collapse = ", ")))
-  
-  # Return result
-  LS[[okelement]][[field]]
+
+  setting = LS[[okelement]][[field]]
+
+  print( paste0("Found setting: ", setting) )
+
+  return ( setting )
 }
 
 

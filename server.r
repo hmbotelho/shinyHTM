@@ -84,10 +84,87 @@ shinyServer(function(input, output, session){
     
     # This variable stores info on the kind of plot to draw
     plotType <- reactiveValues(type="none", subtype="none", XaxisType="none")
-    
 
-                               
-    
+
+
+    ################################################################
+    # 0.1 UI WRAPPERS                                              #
+    ################################################################
+
+    createColumnSelectionUI <- function( inputId, label, settings = NULL, default = NULL )
+    {
+        value <- subsetUI( settings, type = "input", name = inputId )
+
+        if ( is.null( value ) )
+        {
+            value <- default
+        }
+
+        selectInput(
+            inputId,
+            label,
+            choices = if (exists("htm")) as.list(names(htm) ) else NULL,
+            selected = value,
+            width = "100%"
+        )
+    }
+
+    createTextInputUI <- function( inputId, label, settings = NULL, default = NULL )
+    {
+        value <- subsetUI( settings, type = "input", name = inputId )
+
+        if ( is.null( value ) )
+        {
+            value <- default
+        }
+
+        textInput(
+            inputId,
+            label,
+            value = value,
+            width = "100%"
+        )
+    }
+
+    createNumericInputUI <- function( inputId, label, settings = NULL, default = NULL ){
+
+        value <- subsetUI( settings, type = "input", name = inputId )
+
+        if ( is.null( value ) )
+        {
+            value <- default
+        }
+
+        numericInput(
+            inputId,
+            label,
+            value
+        )
+
+    }
+
+
+    createSliderInputUI <- function( inputId, label, min, max, step, settings = NULL, default = NULL ){
+
+        value <- subsetUI( settings, type = "input", name = inputId )
+
+        if ( is.null( value ) )
+        {
+            value <- default
+        }
+
+        sliderInput(
+            inputId,
+            label,
+            min=min,
+            max=max,
+            value=value,
+            step=step)
+
+    }
+
+
+
     ################################################################
     # 1. FILE INPUT                                                #
     ################################################################
@@ -171,115 +248,99 @@ shinyServer(function(input, output, session){
     ################################################################
     # 2. SETTINGS                                                  #
     ################################################################
-    
-    createInputSelection <- function( inputId, label )
-    {
-      print( paste0("Creating UI: ", inputId ));
-      selectInput( 
-        inputId,
-        label, 
-        choices = if (exists("htm")) as.list(names(htm) ) else NULL,
-        selected = subsetUI( UI(), type = "input", name = inputId ),
-        width = "100%")
-    }
-    
+
+
     output$UIcolNameTreatment        <- renderUI({
         input$file1
         input$applyNorm
-        print("before UI()")
-        UI()
-        print("after UI()")
-        createInputSelection( "colTreatment", "Treatment:" )
+        createColumnSelectionUI( "colTreatment", "Treatment:", UI() )
     })
     
     output$UIcolNameBatch            <- renderUI({
         input$file1
         input$applyNorm
-        UI()
-        createInputSelection( "colBatch", "Batch:" )
+        createColumnSelectionUI( "colBatch", "Batch:", UI() )
     })
     
     output$UIcolNameWell             <- renderUI({
         input$file1
         input$applyNorm
-        UI()
-        createInputSelection( "colWell", "Well coordinate:" )
+        createColumnSelectionUI( "colWell", "Well coordinate:", UI() )
     })
     
     output$UIcolNamePos              <- renderUI({
         input$file1
         input$applyNorm
-        UI()
-        createInputSelection( "colPos", "Sub-position coordinate:" )
+        createColumnSelectionUI( "colPos", "Sub-position coordinate:", UI() )
     })
     
     output$UIpathInTable             <- renderUI({
-        textInput(
-          "pathInTable", 
-          "Image root folder name in table", 
-          "c:\\tutorial\\myplate_01", 
-          width = "100%")
+        createTextInputUI( "pathInTable", "Image root folder name in table", UI() )
     })
+
     output$UIpathInComputer          <- renderUI({
-        textInput("pathInComputer", "Image root folder name in this computer", "c:\\myplate_01", width = "100%")
+        createTextInputUI( "pathInComputer", "Image root folder name in this computer", UI() )
     })
+
     output$UIprefixPath              <- renderUI({
-        textInput("prefixPath", "Prefix: column with folder name", "PathName_")
+        createTextInputUI( "prefixPath", "Prefix: columns with folder names", UI(), "PathName_" )
     })
-    output$UIprefixFile              <- renderUI({
-        textInput("prefixFile", "Prefix: column with file name", "FileName_")
+
+    output$UIprefixFile             <- renderUI({
+        createTextInputUI( "prefixFile", "Prefix: columns with file names", UI(), "FileName_" )
     })
+
     output$UIcolNameObjectPosX       <- renderUI({
-      input$file1
-      input$applyNorm
-      
-      mychoices  <- if (exists("htm")) as.list( c("NA", names(htm))) else NULL
-      myselected <- if (exists("htm")) getObjectPositionColumn( names(htm), "X") else NULL
-      
-      selectInput("colObjectPosX", 
-                  "Object's x-position:", 
-                  mychoices, 
-                  selected = myselected, 
-                  width = "100%")
+        input$file1
+        input$applyNorm
+        createColumnSelectionUI( "colObjectPosX", "Object's x-position:", UI() )
     })
 
     output$UIcolNameObjectPosY       <- renderUI({
-      input$file1
-      input$applyNorm
-      
-      mychoices  <- if (exists("htm")) as.list( c("NA", names(htm))) else NULL
-      myselected <- if (exists("htm")) getObjectPositionColumn( names(htm), "Y") else NULL
-      
-      selectInput("colObjectPosY", "Object's y-position:", mychoices, selected = myselected, width = "100%")
+        input$file1
+        input$applyNorm
+        createColumnSelectionUI( "colObjectPosY", "Object's y-position:", UI() )
     })
 	
     output$UIcolNameObjectPosZ       <- renderUI({
-      input$file1
-      input$applyNorm
-      
-      mychoices  <- if (exists("htm")) as.list( c("NA", names(htm))) else NULL
-      myselected <- if (exists("htm")) getObjectPositionColumn( names(htm), "Z") else NULL
-      
-      selectInput("colObjectPosZ", "Object's z-position:", mychoices, selected = myselected, width = "100%")
+        input$file1
+        input$applyNorm
+        createColumnSelectionUI( "colObjectPosZ", "Object's z-position:", UI() )
     })
     
     output$UIwells_Y                 <- renderUI({
-        numericInput("wells_Y", "Number of Rows", subsetUI( UI(), type = "input", name = "wells_Y" ) )
+        createNumericInputUI( "wells_Y", "Number of Rows", UI(), 8)
     })
     output$UIwells_X                 <- renderUI({
-        numericInput("wells_X", "Number of Columns", subsetUI( UI(), type = "input", name = "wells_X" ))
+        createNumericInputUI("wells_X", "Number of Columns", UI(), 12)
     })
     output$UInpos_Y                  <- renderUI({
-        numericInput("npos_Y", "Number of subposition Rows", subsetUI( UI(), type = "input", name = "npos_Y" ))
+        createNumericInputUI("npos_Y", "Number of subposition Rows", UI(), 1)
     })
     output$UInpos_X                  <- renderUI({
-        numericInput("npos_X", "Number of subposition Columns", subsetUI( UI(), type = "input", name = "npos_X" ))
+        createNumericInputUI("npos_X", "Number of subposition Columns", UI(), 1)
     })
     output$UIsquaredodge             <- renderUI({
-        sliderInput("squaredodge", "Separation between positions", min=0, max=0.5, value=0.2, step=0.1)
+
+        createSliderInputUI(
+            "squaredodge",
+            "Separation between positions",
+            min=0,
+            max=0.5,
+            step=0.1,
+            settings = UI(),
+            default = 0.2)
     })
+
     output$UIsquaresize              <- renderUI({
-        sliderInput("squaresize", "Square size", min=0.5, max=5, value=1, step=0.5)
+        createSliderInputUI(
+            "squaresize",
+            "Square size",
+            min=0.5,
+            max=5,
+            step=0.5,
+            settings = UI(),
+            default = 1)
     })
 
     output$UIfiji_path        <- renderUI({
@@ -292,9 +353,7 @@ shinyServer(function(input, output, session){
         {
             fiji_binary_path = "/Applications/Fiji.app/Contents/MacOS/ImageJ-macosx"
         }
-
-        textInput("fiji_binary", "Path to Fiji ", value = fiji_binary_path, width = "100%")
-    
+        createTextInputUI( "fiji_binary", "Path to Fiji: ", UI(), fiji_binary_path )
     })
     
     output$UIavailableimages  <- renderUI({
