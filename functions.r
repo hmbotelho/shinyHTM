@@ -225,6 +225,7 @@ filterDataFrame <- function( df, x_col, y_col, batch_col, batch, highlightQCfail
 pointPlot <- function( df, x, y, plottype, col_QC, highlightQCfailed, beeswarm = FALSE, splitBy = "None", colTreatment, colBatch, colColors ){
 
     # Initialize variables
+    df$lineIndex <- 1:nrow(df)
     plotSymbols <- c( approved = 20, rejected = 4 )
     
     # Assign symbol to be used at each data point
@@ -262,7 +263,7 @@ pointPlot <- function( df, x, y, plottype, col_QC, highlightQCfailed, beeswarm =
     # SCATTER PLOT
     if(plottype == "scatter"){
         
-        g <- g + geom_point(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors)) + 
+        g <- g + geom_point(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s<br>Line Index: %s", df[[colTreatment]], df[[colBatch]], df$lineIndex), color = plotColors)) + 
                  scale_color_manual(values=plotColors) + 
                  theme(legend.position="none")
         
@@ -271,7 +272,7 @@ pointPlot <- function( df, x, y, plottype, col_QC, highlightQCfailed, beeswarm =
     # BEESWARM
     if(plottype == "beeswarm"){
         
-        g <- g + geom_quasirandom(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors)) + 
+        g <- g + geom_quasirandom(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s<br>Line Index: %s", df[[colTreatment]], df[[colBatch]], df$lineIndex), color = plotColors)) + 
                  scale_color_manual(values=plotColors) + 
                  theme(legend.position="none")
     }
@@ -293,7 +294,7 @@ pointPlot <- function( df, x, y, plottype, col_QC, highlightQCfailed, beeswarm =
             jitterY <- jitteramount  
         }
         
-        g <- g + geom_jitter(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s", df[[colTreatment]], df[[colBatch]]), color = plotColors ), position = position_jitter(w = jitterX, h = jitterY)) +
+        g <- g + geom_jitter(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s<br>Line Index: %s", df[[colTreatment]], df[[colBatch]], df$lineIndex), color = plotColors ), position = position_jitter(w = jitterX, h = jitterY)) +
                  scale_color_manual(values=plotColors) + 
                  theme(legend.position="none")
         
@@ -339,6 +340,7 @@ boxPlot <- function(df, batch, x, y, col_QC, highlightCenter = "No", splitBy = "
 heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, col_QC, highlightQCfailed, colorMin = -Inf, colorMax = +Inf, lutColors = "Blue-White-Red", colTreatment, colBatch ){
     
     # Initialize variables
+    df$lineIndex <- 1:nrow(df)
     plotSymbols <- c(approved = 15, rejected = 4)
     
     if ( lutColors == "Blue-White-Red" )
@@ -361,7 +363,7 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
     # Define the data to be plotted
     g <- ggplot( df, 
                  aes( heatX, heatY, color = LUT, 
-                      text = sprintf("%s: %s<br>Treatment: %s<br>Batch: %s", measurement, df[[measurement]], df[[colTreatment]], df[[colBatch]])
+                      text = sprintf("%s: %s<br>Treatment: %s<br>Batch: %s<br>Line Index: %s", measurement, df[[measurement]], df[[colTreatment]], df[[colBatch]], df$lineIndex)
                  ) 
     )
     
