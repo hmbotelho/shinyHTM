@@ -91,7 +91,7 @@ shinyServer(function(input, output, session){
     # 0.1 UI WRAPPERS                                              #
     ################################################################
 
-    createColumnSelectionUI <- function( inputId, label, settings = NULL, default = NULL )
+    createColumnSelectionUI <- function( inputId, label, settings = NULL, extraChoices = NULL, default = NULL )
     {
         value <- subsetUI( settings, type = "input", name = inputId )
 
@@ -103,7 +103,7 @@ shinyServer(function(input, output, session){
         selectInput(
             inputId,
             label,
-            choices = if (exists("htm")) as.list(names(htm) ) else NULL,
+            choices = if (exists("htm")) as.list(c(extraChoices, names(htm)) ) else NULL,
             selected = value,
             width = "100%"
         )
@@ -293,19 +293,19 @@ shinyServer(function(input, output, session){
     output$UIcolNameObjectPosX       <- renderUI({
         input$file1
         input$applyNorm
-        createColumnSelectionUI( "colObjectPosX", "Object's x-position:", UI() )
+        createColumnSelectionUI( "colObjectPosX", "Object's x-position:", UI(), extraChoices = "NA" )
     })
 
     output$UIcolNameObjectPosY       <- renderUI({
         input$file1
         input$applyNorm
-        createColumnSelectionUI( "colObjectPosY", "Object's y-position:", UI() )
+        createColumnSelectionUI( "colObjectPosY", "Object's y-position:", UI(), extraChoices = "NA" )
     })
 	
     output$UIcolNameObjectPosZ       <- renderUI({
         input$file1
         input$applyNorm
-        createColumnSelectionUI( "colObjectPosZ", "Object's z-position:", UI() )
+        createColumnSelectionUI( "colObjectPosZ", "Object's z-position:", UI(), extraChoices = "NA" )
     })
     
     output$UIwells_Y                 <- renderUI({
@@ -950,7 +950,7 @@ shinyServer(function(input, output, session){
     output$selection <- renderPrint( {
         
         s <- event_data( "plotly_click" )
-        
+
         if( is.null( s ) ) 
         {
           return( "Welcome!" );
@@ -993,7 +993,7 @@ shinyServer(function(input, output, session){
           print( input$colObjectPosY )
           print( input$colObjectPosZ )
           print( paste( "Object position: ", x, y, z ) )
-          
+
           OpenInFiji( directories, filenames, input$fiji_binary, x, y, z )
           
         }) # isolate

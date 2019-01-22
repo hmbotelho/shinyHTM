@@ -395,7 +395,7 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
 # filePath is an array of character strings
 OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe", x, y, z )
 {
-    
+
     num_images = length( directories );  
     
     import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\");";
@@ -449,7 +449,7 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     #
     # highlight object 
     #
-    
+
     # set slice
     if ( ! is.null( z ) &&  z != "NA" )
     { 
