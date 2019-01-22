@@ -994,7 +994,7 @@ shinyServer(function(input, output, session){
           print( input$colObjectPosZ )
           print( paste( "Object position: ", x, y, z ) )
 
-          OpenInFiji( directories, filenames, input$fiji_binary, x, y, z )
+          OpenInFiji( directories, filenames, input$fiji_binary, x, y, z, stackName = paste0("pointNumber_", s[1,"pointNumber"]) )
           
         }) # isolate
     

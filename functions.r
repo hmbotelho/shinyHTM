@@ -393,9 +393,8 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
 
 # Can open multiple files at once
 # filePath is an array of character strings
-OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe", x, y, z )
+OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\ImageJ-win64.exe", x, y, z, stackName = "composite" )
 {
-
     num_images = length( directories );  
     
     import_image_sequence_reg_exp_template = "IJ.run(\"Image Sequence...\", \"open=[DIRECTORY] file=(REGEXP) sort\");";
@@ -439,11 +438,27 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
         
     }
     
-    if ( num_images == 2 )
+    if ( num_images > 1 & num_images <= 7 )
     {
-        merge_channels = "IJ.run(imp1, \"Merge Channels...\", \"c1=\"+imp1.getTitle()+\" c2=\"+imp2.getTitle()+\" create\");"
+        # Create composite image. ImageJ supports up to 7 channels.
+        # merge_channels = "IJ.run(imp1, \"Merge Channels...\", \"c1=\"+imp1.getTitle()+\" c2=\"+imp2.getTitle()+\" create\");"
+        merge_channels = paste0("IJ.run(imp1, \"Merge Channels...\", ",
+                                paste0(
+                                    sapply(1:num_images, function(x) paste0("\"c", x, "=\"+imp", x, ".getTitle()")), collapse = "+\" \"+"
+                                ),
+                                "+\" create\");")
+        get_imp2     <- paste0( "ImagePlus imp = IJ.getImage(); ")
+        rename_stack <- paste0("imp.setTitle(\"", stackName, "\");")
+        
         commands <- paste0( commands, merge_channels, "\n" )
+        commands <- paste0( commands, get_imp2, "\n" )
+        commands <- paste0( commands, rename_stack, "\n" )
         commands <- paste0( commands, "IJ.wait( 100 );", "\n" ) # needs time to build the composite image
+    } else
+    {
+        # Create stack
+        make_stack = "IJ.run(imp1, \"Images to Stack\", \"name=Stack title=[] use\");"
+        commands <- paste0( commands, make_stack, "\n" )
     }
     
     #
