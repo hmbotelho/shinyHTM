@@ -440,6 +440,8 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
         
     }
     
+    # When opening more than 1 image: additional post-processing required
+    
     if ( num_images > 1 & num_images <= 7 )
     {
         # Create composite image. ImageJ supports up to 7 channels.
@@ -456,7 +458,8 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
         commands <- paste0( commands, get_imp2, "\n" )
         commands <- paste0( commands, rename_stack, "\n" )
         commands <- paste0( commands, "IJ.wait( 100 );", "\n" ) # needs time to build the composite image
-    } else
+    }
+    if ( num_images > 7 )
     {
         # Create stack
         make_stack = "IJ.run(imp1, \"Images to Stack\", \"name=Stack title=[] use\");"
