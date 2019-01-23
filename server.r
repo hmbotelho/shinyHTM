@@ -983,7 +983,7 @@ shinyServer(function(input, output, session){
           print( paste0( "Launching Fiji: ", input$fiji_binary ) )
           print( directories )
           print( filenames )
-          
+
           x <- "NA"; y <- "NA"; z <- "NA";
           if ( input$colObjectPosX != "NA ") { x <- df[i, input$colObjectPosX] }
           if ( input$colObjectPosY != "NA ") { y <- df[i, input$colObjectPosY] }
@@ -994,7 +994,7 @@ shinyServer(function(input, output, session){
           print( input$colObjectPosZ )
           print( paste( "Object position: ", x, y, z ) )
 
-          OpenInFiji( directories, filenames, input$fiji_binary, x, y, z, stackName = paste0("pointNumber_", s[1,"pointNumber"]) )
+          OpenInFiji( directories, filenames, input$fiji_binary, x, y, z, stackName = filenames[1,1] )
           
         }) # isolate
     
