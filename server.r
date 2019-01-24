@@ -1646,8 +1646,9 @@ shinyServer(function(input, output, session){
     observeEvent(c(input$file1, input$buttonSessionLoad, input$applyQC, input$applyNorm, input$applySummary, input$update_dataTable), {
 
         if(exists("htm")){
+            
             output$UIValuesTable <- renderUI({
-                output$valuestable <- renderDataTable(htm)
+                output$valuestable <- renderDataTable(datatable(htm,rownames = TRUE,filter = 'top'))
                 dataTableOutput("valuestable")
             })
         } else{
