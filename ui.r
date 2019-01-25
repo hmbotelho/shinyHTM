@@ -225,15 +225,11 @@ shinyUI(navbarPage("shinyHTM",
             uiOutput("UIValuesTable")
         ),
         
-        tabPanel("Save & Load settings",
-            h2("Save & Load settings"),
-            br(),
-            actionButton("buttonSessionSave", "Save session...", icon = icon("save")),
-            br(),br(),br(),
-            actionButton("buttonSessionLoad", "Restore previous session...", icon = icon("refresh")),
-            br(),br(),
-            verbatimTextOutput("echo_SaveLoadSession")
-        ),
+        # tabPanel("Save & Load settings",
+        #     h2("Save & Load settings"),
+        #     br()
+        #     # Some widgets
+        # ),
         
         tabPanel("About",
             
