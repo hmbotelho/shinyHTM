@@ -233,11 +233,30 @@ shinyUI(navbarPage("shinyHTM",
         
         tabPanel("About",
             
-            p("By Hugo Botelho, March 2017"),
-            a(href="mailto:hugobotelho@gmail.com", "hugobotelho@gmail.com"),
-            a(href="http://webpages.fc.ul.pt/~hmbotelho", "http://webpages.fc.ul.pt/~hmbotelho"),
+            h3("Developers"),
+            fluidRow(
+                column(width = 2, h4("Name")),
+                column(width = 2, h4("e-mail")),
+                column(width = 2, h4("Webpage"))
+            ),
+            fluidRow(
+                column(width = 2, p("Hugo Botelho")),
+                column(width = 2, a(href="mailto:hugobotelho@gmail.com", "hugobotelho@gmail.com")),
+                column(width = 2, a(href="http://webpages.fc.ul.pt/~hmbotelho", "http://webpages.fc.ul.pt/~hmbotelho"))
+            ),
+            fluidRow(
+                column(width = 2, p("Christian Tischer")),
+                column(width = 2, a(href="", "")),
+                column(width = 2, a(href="", ""))
+            ),
+            fluidRow(
+                column(width = 2, p("Aliaksandr Halavatyi")),
+                column(width = 2, a(href="", "")),
+                column(width = 2, a(href="", ""))
+            ),
             hr(),
-            p("Check for updates on GitHub"),
+            p("Original release by Hugo Botelho, March 2017"),
+            p("Check for updates on GitHub:"),
             a(href="https://github.com/hmbotelho/shinyHTM", "https://github.com/hmbotelho/shinyHTM")
         )
     )
