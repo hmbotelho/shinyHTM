@@ -1197,10 +1197,29 @@ shinyServer(function(input, output, session){
     ################################################################
     # DATA TABLE                                                   #
     ################################################################
+    
+    observeEvent(c(input$file1, input$buttonSessionLoad, input$applyQC, input$applyNorm, input$applySummary, input$update_dataTable), {
+        
+        if(exists("htm")){
+            
+            output$UIValuesTable <- renderUI({
+                output$valuestable <- renderDataTable(datatable(htm,rownames = TRUE,filter = 'top'))
+                dataTableOutput("valuestable")
+            })
+        } else{
+            output$UIValuesTable <- renderUI(
+                tagList(br(), p("Nothing to show here: there is no data table currently loaded."))
+            )
+        }
+        
+    })
+    
     observeEvent(input$saveHTMtable,{
         path <- tclvalue(tkgetSaveFile(initialfile = "HTMtable.csv"))
         write.csv(htm, path, row.names = FALSE)
     })
+    
+    
     
     ################################################################
     # SETTINGS                                                     #
@@ -1216,6 +1235,8 @@ shinyServer(function(input, output, session){
         saveSettings( getUISettings(), file )
       }
     )
+    
+    
     
     ################################################################
     # SAVE & LOAD SESSION                                          #
@@ -1638,24 +1659,4 @@ shinyServer(function(input, output, session){
         )
     })
     
-    
-    
-    ################################################################
-    # DATA TABLE                                                   #
-    ################################################################
-    observeEvent(c(input$file1, input$buttonSessionLoad, input$applyQC, input$applyNorm, input$applySummary, input$update_dataTable), {
-
-        if(exists("htm")){
-            
-            output$UIValuesTable <- renderUI({
-                output$valuestable <- renderDataTable(datatable(htm,rownames = TRUE,filter = 'top'))
-                dataTableOutput("valuestable")
-            })
-        } else{
-            output$UIValuesTable <- renderUI(
-                tagList(br(), p("Nothing to show here: there is no data table currently loaded."))
-            )
-        }
- 
-    })
 })
