@@ -1203,7 +1203,8 @@ shinyServer(function(input, output, session){
         if(exists("htm")){
             
             output$UIValuesTable <- renderUI({
-                output$valuestable <- renderDataTable(DT::datatable(htm,rownames = TRUE,filter = 'top'))
+		library(DT)
+                output$valuestable <- renderDataTable(datatable(htm,rownames = TRUE,filter = 'top'))
                 dataTableOutput("valuestable")
             })
         } else{
