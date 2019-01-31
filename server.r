@@ -571,7 +571,13 @@ shinyServer(function(input, output, session){
                     
                     tagList(
                         fluidRow(column(12,
-                                    sliderInput("LUTminmax", "LUT adjustment", min = Ymin, max = Ymax, value = c(Ymin, Ymax), width = "100%")
+                                    sliderInput(
+                                    "LUTminmax",
+                                    "LUT adjustment",
+                                    min = Ymin,
+                                    max = Ymax,
+                                    value = c(Ymin, Ymax),
+                                    width = "100%")
                                 )
                         # ),
                         # fluidRow(column(4,
@@ -591,7 +597,12 @@ shinyServer(function(input, output, session){
                     # Do not show LUT colors if the user selects a non-numerical column
                     if(is.null(input$LUTminmax)) return(NULL)
                     
-                    selectInput("LUTcolors", "LUT colors", choices = c("Red-White-Green", "Blue-White-Red"), width = "100%")
+                    selectInput(
+                    "LUTcolors",
+                    "LUT colors",
+                    selected = subsetUI( UI(), type = "input", name = "LUTcolors" ),
+                    choices = c("Blue-White-Red", "Red-White-Green"),
+                    width = "100%")
                 })
                 
                 output$UIhighlightQCfailed      <- renderUI({
@@ -599,7 +610,9 @@ shinyServer(function(input, output, session){
                     # Do not show LUT colors if the user selects a non-numerical column
                     if(is.null(input$LUTminmax)) return(NULL)
                     
-                    selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross"))
+                    selectInput("highlightQCfailed",
+                    "Display data points that failed QC",
+                    choices = c("Don't show","Show with cross"))
                 })
                 
             }
