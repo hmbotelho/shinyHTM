@@ -569,14 +569,11 @@ shinyServer(function(input, output, session){
                     # (Otherwise outliers can mess up the range a lot)
                     if( ! is.null( col_QC ) )
                     {
-                        print("col_QC exists")
                         Ymin <- if (exists("htm")) min( htm[[input$Yaxis]][htm[["HTM_QC"]]], na.rm = TRUE) else 0
                         Ymax <- if (exists("htm")) max( htm[[input$Yaxis]][htm[["HTM_QC"]]], na.rm = TRUE) else 0
-                        print("aaa")
                     }
                     else
                     {
-                        print("col_QC does not exist")
                         Ymin <- if (exists("htm")) min( htm[[input$Yaxis]], na.rm = TRUE) else 0
                         Ymax <- if (exists("htm")) max( htm[[input$Yaxis]], na.rm = TRUE) else 0
                     }
@@ -606,7 +603,7 @@ shinyServer(function(input, output, session){
                     )
 
                 })
-                
+
                 output$UILUTcolors              <- renderUI({
                     
                     # Do not show LUT colors if the user selects a non-numerical column
@@ -682,6 +679,8 @@ shinyServer(function(input, output, session){
     output$plot <- renderPlotly({
         
         input$plotScatterBoxOrHeatmap
+
+        input$LUTminmax
 
         isolate({
           

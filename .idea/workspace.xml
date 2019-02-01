@@ -14,8 +14,8 @@
       <file leaf-file-name="server.r" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/server.r">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="338">
-              <caret line="588" column="47" lean-forward="false" selection-start-line="588" selection-start-column="36" selection-end-line="588" selection-end-column="47" />
+            <state relative-caret-position="228">
+              <caret line="377" column="44" lean-forward="false" selection-start-line="377" selection-start-column="32" selection-end-line="377" selection-end-column="44" />
               <folding />
             </state>
           </provider>
@@ -79,8 +79,12 @@
       <find>&amp;</find>
       <find>input$QC</find>
       <find>heat</find>
-      <find>heatMap</find>
       <find>heatmapPlot</find>
+      <find>heatMap</find>
+      <find>LUTminmax</find>
+      <find>heatmap</find>
+      <find>Update P</find>
+      <find>input$plotTy</find>
     </findStrings>
   </component>
   <component name="GradleLocalSettings">
@@ -219,7 +223,7 @@
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19181585" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.049872123" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16467631" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="R Packages" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -299,8 +303,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/server.r">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="338">
-          <caret line="588" column="47" lean-forward="false" selection-start-line="588" selection-start-column="36" selection-end-line="588" selection-end-column="47" />
+        <state relative-caret-position="228">
+          <caret line="377" column="44" lean-forward="false" selection-start-line="377" selection-start-column="32" selection-end-line="377" selection-end-column="44" />
           <folding />
         </state>
       </provider>
