@@ -262,7 +262,9 @@ pointPlot <- function( df, x, y, plottype, col_QC, highlightQCfailed, beeswarm =
     # SCATTER PLOT
     if(plottype == "scatter"){
         
-        g <- g + geom_point(shape = symbols, aes(text = sprintf("<br>Treatment: %s<br>Batch: %s<br>Line Index: %s", df[[colTreatment]], df[[colBatch]], df$lineIndex), color = plotColors)) + 
+        g <- g + geom_point(shape = symbols,
+                aes(text = sprintf(
+                "<br>Treatment: %s<br>Batch: %s<br>Line Index: %s", df[[colTreatment]], df[[colBatch]], df$lineIndex), color = plotColors)) +
                  scale_color_manual(values=plotColors) + 
                  theme(legend.position="none")
         
@@ -313,9 +315,10 @@ pointPlot <- function( df, x, y, plottype, col_QC, highlightQCfailed, beeswarm =
 
 # Generate Plotly boxplot
 boxPlot <- function(df, batch, x, y, col_QC, highlightCenter = "No", splitBy = "None", colTreatment, colBatch  ){
-    
+
+
     # Make plot
-    g <- ggplot(df, aes_string(x, y))
+    g <- ggplot( df, aes_string( paste0( "`", x,"`" ), paste0( "`", y,"`" ) ) )
     g <- g + geom_boxplot() + ggtitle( batch )
     
     # Customize plot

@@ -487,8 +487,8 @@ shinyServer(function(input, output, session){
         # Display plot control widgets depending on which plot type is selected
         switch(input$plotType,
             "Scatter plot" = {
-                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "X axis:", choices = mychoices_allcols, width = "200%"))
-                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Y axis:", choices = mychoices_allcols, width = "200%"))
+                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "X axis:", selected = input$Xaxis, choices = mychoices_allcols, width = "200%"))
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Y axis:", selected = input$Yaxis, choices = mychoices_allcols, width = "200%"))
                 
                 output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show with cross")))
                 
@@ -527,8 +527,8 @@ shinyServer(function(input, output, session){
                 output$UILUTcolors <- renderUI(NULL)
             },
             "Boxplot"      = {
-                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "Categories:", choices = mychoices_allcols, width = "200%"))
-                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = mychoices_allcols, width = "200%"))
+                output$UIselectXaxis <- renderUI(selectInput("Xaxis", "Categories:", selected = input$Xaxis, choices = mychoices_allcols, width = "200%"))
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", selected = input$Yaxis, choices = mychoices_allcols, width = "200%"))
                 
                 output$UIhighlightQCfailed     <- renderUI(selectInput("highlightQCfailed", "Display data points that failed QC", choices = c("Don't show","Show as cross")))
                 
@@ -548,7 +548,7 @@ shinyServer(function(input, output, session){
             },
             "Heatmap"      = {
                 output$UIselectXaxis <- renderUI(NULL)
-                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", choices = mychoices_allcols, width = "200%"))
+                output$UIselectYaxis <- renderUI(selectInput("Yaxis", "Values:", selected = input$Yaxis, choices = mychoices_allcols, width = "200%"))
                 
                 output$UIPointplotsBeeswarm     <- renderUI(NULL)
                 output$UIPointplotsplitBy       <- renderUI(NULL)
