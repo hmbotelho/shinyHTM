@@ -466,15 +466,15 @@ shinyServer(function(input, output, session){
         
         if( is.null( input$colBatch ) )
         {
-          selectInput("batch", "Show this batch:", as.list( c( "All batches" ) ) )
+          selectInput("batch", "Show this batch:", as.list( c( "All batches" ) ), selected = input$batch )
         }
         else if( input$plotType == "Heatmap" )
         {
-          selectInput("batch", "Show this batch:", mychoices ) 
+          selectInput("batch", "Show this batch:", mychoices, selected = input$batch )
         }
         else
         {
-          selectInput("batch", "Show this batch:", mychoices_all )
+          selectInput("batch", "Show this batch:", mychoices_all, selected = input$batch )
         }
     })
     
