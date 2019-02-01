@@ -1090,6 +1090,10 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
     
     # output
     echo(""); echo("Experiments:")
+    for(experiment in experiments)
+    {
+        echo(""); echo(experiment)
+    }
     echo(experiments)
     echo(""); echo("Number of treatments: ", length(treatments))
     echo(""); echo("Negative control: ", negative_ctrl)
