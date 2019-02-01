@@ -562,12 +562,27 @@ shinyServer(function(input, output, session){
                 output$UIBoxplotsplitBy         <- renderUI(NULL)
                 
                 output$UILUTminmax              <- renderUI({
-                    # Do not show LUT adjustments if a dataset is not loaded
-                    Ymin <- if (exists("htm")) min(htm[[input$Yaxis]], na.rm = TRUE) else 0
-                    Ymax <- if (exists("htm")) max(htm[[input$Yaxis]], na.rm = TRUE) else 0
+
+                    input$applyQC
+
+                    # Compute LUT Range only from items that passed QC
+                    # (Otherwise outliers can mess up the range a lot)
+                    if( ! is.null( col_QC ) )
+                    {
+                        print("col_QC exists")
+                        Ymin <- if (exists("htm")) min( htm[[input$Yaxis]][htm[["HTM_QC"]]], na.rm = TRUE) else 0
+                        Ymax <- if (exists("htm")) max( htm[[input$Yaxis]][htm[["HTM_QC"]]], na.rm = TRUE) else 0
+                        print("aaa")
+                    }
+                    else
+                    {
+                        print("col_QC does not exist")
+                        Ymin <- if (exists("htm")) min( htm[[input$Yaxis]], na.rm = TRUE) else 0
+                        Ymax <- if (exists("htm")) max( htm[[input$Yaxis]], na.rm = TRUE) else 0
+                    }
                     
                     # Do not show LUT adjustments if the user selects a non-numerical column
-                    if(!is.numeric(Ymin) | !is.numeric(Ymax)) return(NULL)
+                    if( !is.numeric(Ymin) | !is.numeric(Ymax)) return(NULL)
                     
                     tagList(
                         fluidRow(column(12,
