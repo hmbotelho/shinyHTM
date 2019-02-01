@@ -254,9 +254,8 @@ pointPlot <- function( df, x, y, plottype, col_QC, highlightQCfailed, beeswarm =
     #     }
     # }
 
-    
-    # Define the data to be plotted
-    g <- ggplot(df, aes_string( x, y)) + ggtitle( colBatch ) + scale_colour_gradient2()
+
+    g <- ggplot(df, aes_string( paste0( "`", x,"`" ), paste0( "`", y,"`" ))) + ggtitle( colBatch ) + scale_colour_gradient2()
     
     
     # Generate plot object
