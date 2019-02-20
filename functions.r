@@ -399,7 +399,7 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
         scale_colour_gradientn(colors = colorGrad) + 
         ggtitle(batch) + 
         theme(panel.grid = element_blank()) +
-        scale_x_continuous(breaks=1:ncolumns) + 
+        scale_x_continuous(breaks = 1:ncolumns) +
         scale_y_continuous(breaks = 1:nrows, labels = LETTERS[nrows:1]) + 
         theme(axis.title.x=element_blank(), axis.title.y=element_blank())
     
@@ -517,10 +517,10 @@ OpenInFiji <- function( directories, filenames, fijiBinaryPath = "C:\\Fiji.app\\
     system_cmd = paste( fijiBinaryPath, '--run', paste0( '\"', tmp_groovy_script, '\"') );
     
     # print groovy commands for user info and debugging
-    cat( commands )
+    print( commands )
     
     # print command for user info and debugging
-    cat( system_cmd )
+    print( system_cmd )
     
     # Evoke Fiji with the expression compiled above
     system( system_cmd, wait = FALSE )

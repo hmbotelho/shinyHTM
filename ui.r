@@ -81,7 +81,6 @@ shinyUI(navbarPage("shinyHTM",
     tabPanel("3. Plot",
         h2("Plotting"),
         p("Use this plotting tool to explore your data and inspect the images which produced each data point."),
-        verbatimTextOutput("selection"),
         plotlyOutput("plot"),
         br(),
         actionButton("plotScatterBoxOrHeatmap", "Update plot", icon = icon("refresh"), width = "100%", style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
@@ -128,8 +127,11 @@ shinyUI(navbarPage("shinyHTM",
             column(3,
                 uiOutput("UIselectBatch")
             )
-        )
-        
+        ),
+
+        verbatimTextOutput("selection")
+
+
     ),
 
 

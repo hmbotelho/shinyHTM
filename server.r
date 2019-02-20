@@ -526,7 +526,11 @@ shinyServer(function(input, output, session){
                 output$UIPointplotfilterValues <- renderUI(
                   if ( is.null( input$PointplotfilterColumn ) )
                   {
-                    selectInput("PointplotfilterValues", "Matches:", choices = as.list(c("All")) , width = "100%", multiple = TRUE)
+                    selectInput(
+                        "PointplotfilterValues",
+                        "Matches:",
+                        choices = as.list(c("All")),
+                        width = "100%", multiple = TRUE)
                   }
                   else
                   {
