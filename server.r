@@ -612,7 +612,7 @@ shinyServer(function(input, output, session){
                     selectInput(
                     "LUTcolors",
                     "LUT colors",
-                    selected = subsetUI( UI(), type = "input", name = "LUTcolors" ),
+                    #selected = subsetUI( UI(), type = "input", name = "LUTcolors" ),
                     choices = c("Blue-White-Red", "Red-White-Green"),
                     width = "100%")
                 })
