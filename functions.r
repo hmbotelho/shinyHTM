@@ -344,10 +344,13 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
     # Initialize variables
     df$lineIndex <- 1:nrow(df)
     plotSymbols <- c(approved = 15, rejected = 4)
-    
+
+    print( lutColor )
+    print( colorMin )
+    print( colorMax )
     #if ( lutColors == "Blue-White-Red" )
     #{
-        colorGrad   <- c("blue", "white", "red")
+    colorGrad   <- c("blue", "white", "red")
     #}
     #else if ( lutColors == "Red-White-Green" )
     #{
