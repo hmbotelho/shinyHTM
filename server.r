@@ -497,16 +497,31 @@ shinyServer(function(input, output, session){
                 output$UIPointplotfilterColumn <- renderUI(selectInput("PointplotfilterColumn", "Only show images where column:", choices = mychoices_allcols_none, width = "100%"))
                 
                 output$UIPointplotSubsample    <- renderUI(checkboxInput("PointplotSubsample", label = "Subsample data?", value = FALSE))
-                output$UIPointplotSubsampleN   <- renderUI(if(input$PointplotSubsample){
-                    numericInput("PointplotSubsampleN", label = "Plot every Nth data point (black dots)", value = 10, min = 1, max = nrow(htm))
-                }else{
-                    NULL
-                })
-                output$UIPointplotSubsampleM   <- renderUI(if(input$PointplotSubsample){
-                    numericInput("PointplotSubsampleM", label = "Show the M lowest and highest values (red dots)", value = 10, min = 1, max = floor(nrow(htm)/2))
-                }else{
-                    NULL
-                })
+
+                output$UIPointplotSubsampleN   <- renderUI(
+
+                    if( exists( "input$PointplotSubsample" ) && input$PointplotSubsample )
+                    {
+                        numericInput(
+                        "PointplotSubsampleN",
+                        label = "Plot every Nth data point (black dots)",
+                        value = 10,
+                        min = 1,
+                        max = nrow(htm))
+                    }else{
+                         NULL
+                    }
+                )
+                output$UIPointplotSubsampleM   <- renderUI(
+                    if( exists( "input$PointplotSubsample" ) && input$PointplotSubsample )
+                    {
+                        numericInput(
+                            "PointplotSubsampleM",
+                            label = "Show the M lowest and highest values (red dots)",
+                            value = 10, min = 1, max = floor(nrow(htm)/2))
+                     }else{
+                         NULL
+                     })
                 
                 output$UIPointplotfilterValues <- renderUI(
                   if ( is.null( input$PointplotfilterColumn ) )
@@ -575,7 +590,7 @@ shinyServer(function(input, output, session){
                     }
                     else
                     {
-                        print( "QC column does not exist => compute LUT range from all values") )
+                        print( "QC column does not exist => compute LUT range from all values")
                         Ymin <- if (exists("htm")) min( htm[[input$Yaxis]], na.rm = TRUE) else 0
                         Ymax <- if (exists("htm")) max( htm[[input$Yaxis]], na.rm = TRUE) else 0
                     }
@@ -611,14 +626,16 @@ shinyServer(function(input, output, session){
                 })
 
                 output$UILUTcolors <- renderUI({
-                    
+
+                    input$LUTminmax
+
                     # Do not show LUT colors if the user selects a non-numerical column
-                    if(is.null(input$LUTminmax)) return(NULL)
+                    if( is.null(input$LUTminmax) ) return(NULL)
                     
                     selectInput(
                     "LUTcolors",
                     "LUT colors",
-                    #selected = subsetUI( UI(), type = "input", name = "LUTcolors" ),
+                    selected = subsetUI( UI(), type = "input", name = "LUTcolors" ),
                     choices = c("Blue-White-Red", "Red-White-Green"),
                     width = "100%")
                 })
