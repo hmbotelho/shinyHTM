@@ -345,19 +345,19 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
     df$lineIndex <- 1:nrow(df)
     plotSymbols <- c(approved = 15, rejected = 4)
     
-    if ( lutColors == "Blue-White-Red" )
-    {
+    #if ( lutColors == "Blue-White-Red" )
+    #{
         colorGrad   <- c("blue", "white", "red")
-    }
-    else if ( lutColors == "Red-White-Green" )
-    {
-        colorGrad   <- c("red2", "white", "green4")
-    }
-    else
-    {
-        print( "Using default LUT")
-        colorGrad   <- c("blue", "white", "red")
-    }
+    #}
+    #else if ( lutColors == "Red-White-Green" )
+    #{
+    #    colorGrad   <- c("red2", "white", "green4")
+    #}
+    #else
+    #{
+    #    print( "Using default LUT")
+    #    colorGrad   <- c("blue", "white", "red")
+    #}
     
     # Column 'LUT' has numeric values which are solely used for the color lookup table
     df$LUT <- sapply(df[[measurement]], function(f){
