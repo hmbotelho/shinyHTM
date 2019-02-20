@@ -1,3 +1,5 @@
+.idea/
+*.iml
 .Rproj.user
 .Rhistory
 .RData
