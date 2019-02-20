@@ -569,17 +569,23 @@ shinyServer(function(input, output, session){
                     # (Otherwise outliers can mess up the range a lot)
                     if( ! is.null( col_QC ) )
                     {
+                        print( "QC column exists => compute LUT range only from valid values" )
                         Ymin <- if (exists("htm")) min( htm[[input$Yaxis]][htm[["HTM_QC"]]], na.rm = TRUE) else 0
                         Ymax <- if (exists("htm")) max( htm[[input$Yaxis]][htm[["HTM_QC"]]], na.rm = TRUE) else 0
                     }
                     else
                     {
+                        print( "QC column does not exist => compute LUT range from all values") )
                         Ymin <- if (exists("htm")) min( htm[[input$Yaxis]], na.rm = TRUE) else 0
                         Ymax <- if (exists("htm")) max( htm[[input$Yaxis]], na.rm = TRUE) else 0
                     }
                     
                     # Do not show LUT adjustments if the user selects a non-numerical column
-                    if( !is.numeric(Ymin) | !is.numeric(Ymax)) return(NULL)
+                    if( !is.numeric(Ymin) | !is.numeric(Ymax))
+                    {
+                        print( "Non numerical column selected" )
+                        return( NULL)
+                    }
                     
                     tagList(
                         fluidRow(column(12,
@@ -604,7 +610,7 @@ shinyServer(function(input, output, session){
 
                 })
 
-                output$UILUTcolors              <- renderUI({
+                output$UILUTcolors <- renderUI({
                     
                     # Do not show LUT colors if the user selects a non-numerical column
                     if(is.null(input$LUTminmax)) return(NULL)
