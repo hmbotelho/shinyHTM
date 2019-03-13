@@ -367,7 +367,9 @@ heatmapPlot <- function( df, measurement, batch, nrows, ncolumns, symbolsize=1, 
         }
     }
 
-    
+    print( paste0( "colorMin ", colorMin ) )
+    print( paste0( "colorMax ", colorMax ) )
+
     # Column 'LUT' has numeric values which are solely used for the color lookup table
     df$LUT <- sapply(df[[measurement]], function(f){
         if(is.na(f)) return(f)

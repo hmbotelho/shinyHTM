@@ -31,9 +31,7 @@ shinyUI(navbarPage("shinyHTM",
         )
     ),
 
-    
-    
-    
+
     tabPanel("2. Configure settings",
         h2("Settings"),
         h3("Load and save settings..."),

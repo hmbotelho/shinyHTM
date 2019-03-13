@@ -182,7 +182,7 @@ shinyServer(function(input, output, session){
         if(input$loadFileType == "csv"){
             updateRadioButtons(session, "loadDecimalSeparator",
                                label = h4("File format"),
-                               choices = list("Comma (.)" = "."),
+                               choices = list("Dot (.)" = "."),
                                selected = "."
             )
         }
