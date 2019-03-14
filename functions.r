@@ -1224,8 +1224,8 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
                 nBlocks = length(unique(d$experiment)) 
                 n = nrow(d)
                 #print(2-2*pt(abs(t$statistic), df = n - (nBlocks-1) - 2 ))
-                
-                t_test__p_value  <- 2-2*pt(abs(t$statistic), df = n - (nBlocks-1) - 2 )
+
+                t_test__p_value  <- 2 - 2 * pt( abs(t$statistic), df = n - (nBlocks-1) - 2 )
                 t_test__estimate <- t$estimate[2]
                 t_test__signCode <- ifelse(t_test__p_value<0.001,"***",
                                            ifelse(t_test__p_value<0.01,"**",
@@ -1301,6 +1301,7 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
         results$means[i] = means
         results$median__means[i] = median__means
         results$t_test__p_value[i] = t_test__p_value
+        results$t_test__p_value_adjusted[i] = NA # this will be computed below after the treatment loop
         results$t_test__signCode[i] = t_test__signCode
         results$t_test__estimate[i] = t_test__estimate
         #results$z_scores[i] = z_scores
@@ -1312,8 +1313,31 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
         
         
     }  # treatment loop   
-    
-    
+
+    #
+    # Adjust p-values
+    #
+    # FDR = False discovery rate = FP / (FP + TP)
+    #   TP + FP = total number of "hits"
+    # FP = False positive
+    # TP = True positive
+    #
+    # BH adjustment method:
+    # - say we have M measurements
+    # - sort all the p-values
+    # - multiply the p-values with M/K, where the K is the rank in the ordering
+    #       - that means that the lowest p-value will be multiplied with M/1, the 2nd lowest with M/2, a.s.o.
+    #
+    # - after this adjustment a p-value threshold of 0.05 means that the FDR is 0.05
+    # - in other words: the probability that a hit is a false positive is 0.05
+    #
+    # Literature:
+    # - http://varianceexplained.org/statistics/interpreting-pvalue-histogram/
+    #
+    #
+
+    results$t_test__p_value_adjusted = p.adjust(results$t_test__p_value, method = "BH")
+
     echo("")
     echo("done. Created Treatment Summary Table.")
     
