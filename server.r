@@ -169,40 +169,20 @@ shinyServer(function(input, output, session){
     # 1. FILE INPUT                                                #
     ################################################################
 
+    
+    
     observeEvent(input$loadFileType, {
         
-        if(input$loadFileType == "Auto"){
-            updateRadioButtons(session, "loadDecimalSeparator",
-                               label = h4("File format"),
-                               choices = list("Auto detect" = "Auto", "Dot (.)" = ".", "Comma (,)" = ","),
-                               selected = "Auto"
-            )
-        }
+        if(input$loadFileType == "Auto") x <- list("Auto detect" = "Auto", "Dot (.)" = ".", "Comma (,)" = ",")
+        if(input$loadFileType == "csv")  x <- list("Dot (.)" = ".")
+        if(input$loadFileType == "tsv")  x <- list("Auto detect" = "Auto", "Dot (.)" = ".", "Comma (,)" = ",")
+        if(input$loadFileType == "xlsx") x <- list("Auto detect" = "Auto")
         
-        if(input$loadFileType == "csv"){
-            updateRadioButtons(session, "loadDecimalSeparator",
-                               label = h4("File format"),
-                               choices = list("Dot (.)" = "."),
-                               selected = "."
+        updateRadioButtons(session, "loadDecimalSeparator",
+                           label = "Decimal separator",
+                           choices = x,
+                           selected = x[[1]]
             )
-        }
-        
-        if(input$loadFileType == "tsv"){
-            updateRadioButtons(session, "loadDecimalSeparator",
-                               label = h4("File format"),
-                               choices = list("Auto detect" = "Auto", "Dot (.)" = ".", "Comma (,)" = ","),
-                               selected = "Auto"
-            )
-        }
-        
-        if(input$loadFileType == "xlsx"){
-            updateRadioButtons(session, "loadDecimalSeparator",
-                               label = h4("File format"),
-                               choices = list("Auto detect" = "Auto"),
-                               selected = "Auto"
-            )
-        }
-        
     })
     
     observeEvent(input$file1, {
