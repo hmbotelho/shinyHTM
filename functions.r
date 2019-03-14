@@ -652,14 +652,16 @@ applyQC <- function(df, dfQC){
 
 
 #####################################################
-################ From Tischi (below) ################
+################ From HTM-Explorer (below) ##########
 #####################################################
 
 #
 # Normalization
 #
 
-htmNormalization <- function(data, measurements, col_Experiment, transformation, gradient_correction, normalisation, negcontrol, col_QC, col_Well, col_Treatment, num_WellX, num_WellY) {
+htmNormalization <- function(
+    data, measurements, col_Experiment, transformation, gradient_correction, normalisation,
+negcontrol, col_QC, col_Well, col_Treatment, num_WellX = 0, num_WellY = 0) {
     
     echo("*")
     echo("* Data normalization")
@@ -1140,6 +1142,7 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
                           
                           t_test__estimate = rep(NA,numEntries),
                           t_test__p_value  = rep(NA,numEntries),
+                          t_test__p_value_adjusted  = rep(NA,numEntries),
                           t_test__signCode = rep(NA,numEntries),
                           
                           
