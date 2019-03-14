@@ -1230,11 +1230,7 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
 
                 t_test__p_value  <- 2 - 2 * pt( abs(t$statistic), df = n - (nBlocks-1) - 2 )
                 t_test__estimate <- t$estimate[2]
-                t_test__signCode <- ifelse(t_test__p_value<0.001,"***",
-                                           ifelse(t_test__p_value<0.01,"**",
-                                                  ifelse(t_test__p_value<0.05,"*",
-                                                         ifelse(t_test__p_value<0.1,"."," "
-                                                         ))))
+
             }
             
             if ( (sum(d$treatment=="control")>=1) & (sum(d$treatment==treat)>=1) ) {
@@ -1305,7 +1301,7 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
         results$median__means[i] = median__means
         results$t_test__p_value[i] = t_test__p_value
         results$t_test__p_value_adjusted[i] = NA # this will be computed below after the treatment loop
-        results$t_test__signCode[i] = t_test__signCode
+        results$t_test__signCode[i] = NA # this will be computed below after the treatment loop
         results$t_test__estimate[i] = t_test__estimate
         #results$z_scores[i] = z_scores
         #results$median__z_scores[i] = median__z_scores
@@ -1340,6 +1336,14 @@ htmTreatmentSummary <- function(data, measurements, col_Experiment, col_Treatmen
     #
 
     results$t_test__p_value_adjusted = p.adjust(results$t_test__p_value, method = "BH")
+
+
+    results$t_test__signCode <- ifelse(results$t_test__p_value_adjusted<0.001,"***",
+                                ifelse(results$t_test__p_value_adjusted<0.01,"**",
+                                ifelse(results$t_test__p_value_adjusted<0.05,"*",
+                                ifelse(results$t_test__p_value_adjusted<0.1,".",
+                                " "
+                                ))))
 
     echo("")
     echo("done. Created Treatment Summary Table.")
